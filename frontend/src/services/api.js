@@ -1,6 +1,15 @@
-const BASE_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:8000"
-).replace(/\/$/, "");
+import {
+  analyzeLocal,
+  historyLocal,
+  recordLocal,
+  runLocalAnalysis,
+  saveLocal,
+} from "./localDemo";
+
+const configuredUrl = import.meta.env.VITE_API_URL?.trim();
+const hostname = typeof window === "undefined" ? "localhost" : window.location.hostname;
+const hostedDemo = !configuredUrl && !["localhost", "127.0.0.1"].includes(hostname);
+const BASE_URL = (configuredUrl || "http://localhost:8000").replace(/\/$/, "");
 const validAnalysis = (data) =>
   data &&
   Number.isFinite(data.health_score) &&
@@ -73,36 +82,53 @@ async function request(path, body, validate = () => true) {
   }
 }
 export const api = {
-  health: () => request("/api/health", null, (data) => data?.status === "ok"),
-  analyze: (patient) => request("/api/analyze", patient, validAnalysis),
+  health: () =>
+    hostedDemo
+      ? Promise.resolve({ status: "ok", database: "browser", workers: 5 })
+      : request("/api/health", null, (data) => data?.status === "ok"),
+  analyze: (patient) =>
+    hostedDemo
+      ? Promise.resolve(analyzeLocal(patient))
+      : request("/api/analyze", patient, validAnalysis),
   run: (mode, patient) =>
-    request(
-      `/api/analyze/${mode}`,
-      patient,
-      mode === "compare"
-        ? (data) =>
-            validRun(data?.sequential) &&
-            validRun(data?.parallel) &&
-            Number.isFinite(data.speedup) &&
-            Number.isFinite(data.improvement_percent)
-        : validRun,
-    ),
-  save: (patient) =>
-    request("/api/patients", patient, (data) => Number.isInteger(data?.id)),
-  history: () =>
-    request(
-      "/api/patients",
-      null,
-      (data) =>
-        Array.isArray(data) &&
-        data.every(
-          (item) => Number.isInteger(item.id) && typeof item.name === "string",
+    hostedDemo
+      ? Promise.resolve(runLocalAnalysis(mode, patient))
+      : request(
+          `/api/analyze/${mode}`,
+          patient,
+          mode === "compare"
+            ? (data) =>
+                validRun(data?.sequential) &&
+                validRun(data?.parallel) &&
+                Number.isFinite(data.speedup) &&
+                Number.isFinite(data.improvement_percent)
+            : validRun,
         ),
-    ),
+  save: (patient) =>
+    hostedDemo
+      ? Promise.resolve(saveLocal(patient))
+      : request("/api/patients", patient, (data) => Number.isInteger(data?.id)),
+  history: () =>
+    hostedDemo
+      ? Promise.resolve(historyLocal())
+      : request(
+          "/api/patients",
+          null,
+          (data) =>
+            Array.isArray(data) &&
+            data.every(
+              (item) => Number.isInteger(item.id) && typeof item.name === "string",
+            ),
+        ),
   record: (id) =>
-    request(
-      `/api/patients/${id}`,
-      null,
-      (data) => Number.isInteger(data?.id) && validAnalysis(data.analysis),
-    ),
+    hostedDemo
+      ? Promise.resolve(recordLocal(id)).then((record) => {
+          if (!record) throw new Error("Analysis record not found.");
+          return record;
+        })
+      : request(
+          `/api/patients/${id}`,
+          null,
+          (data) => Number.isInteger(data?.id) && validAnalysis(data.analysis),
+        ),
 };

@@ -97,6 +97,15 @@ npm install
 npm run dev
 ```
 
+## Deployment
+
+The production frontend is deployed on Vercel. The root `vercel.json` builds
+`frontend/` and serves its Vite output with SPA rewrites. When the app is
+opened on a hosted origin without `VITE_API_URL`, analysis, processing, and
+history use the browser's local storage so the academic demo remains usable
+without a hosted database. Local development continues to use the FastAPI
+service on port 8000.
+
 Open [SmartHealth](http://localhost:5173). API documentation is available at [FastAPI Swagger UI](http://localhost:8000/docs).
 
 ### Environment options

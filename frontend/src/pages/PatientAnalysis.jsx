@@ -133,8 +133,8 @@ export default function PatientAnalysis() {
           <div className="intake-foot">
             <strong>Your data stays local.</strong>
             <p>
-              Records are written to this project’s SQLite database only when
-              you choose Save Analysis.
+              Records are saved in this browser only when you choose Save
+              Analysis.
             </p>
           </div>
         </aside>
