@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.db
+.env
+.DS_Store
+
+# Local verification captures and design working files
+.impeccable/
+.env.*
+!.env.example
+*.log
