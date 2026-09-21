@@ -1,0 +1,325 @@
+/* New functional surfaces use the repository's existing monochrome glass palette. */
+.account-section {
+  margin-bottom: 28px;
+}
+.account-bar,
+.account-bar nav,
+.row-actions,
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.account-bar {
+  justify-content: space-between;
+  border-bottom: 1px solid #ffffff25;
+  padding-bottom: 20px;
+  font-size: 14px;
+}
+.account-bar strong {
+  margin-right: 12px;
+}
+.account-bar a:hover,
+.panel a:not(.button):hover {
+  color: #d2e5b0;
+}
+.muted,
+.directory-row small {
+  color: #bcbcbc;
+}
+.account-panel {
+  max-width: 680px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin: 25px 0;
+  align-items: end;
+}
+.account-panel .form-grid {
+  grid-template-columns: 1fr;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+  font-size: 15px;
+}
+.field > label {
+  color: #e5e5e5;
+}
+.field input,
+.field select {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border: 1px solid #ffffff35;
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: #f5f5f5;
+  background: #161616e0;
+  font: inherit;
+  font-size: 16px;
+}
+.field input:focus,
+.field select:focus {
+  outline: 2px solid #d2e5b0;
+  outline-offset: 2px;
+}
+.field input::placeholder {
+  color: #999;
+}
+.field select option {
+  background: #171717;
+  color: #fff;
+}
+.form-actions {
+  grid-column: 1 / -1;
+  margin: 15px 0;
+}
+.panel > h2 {
+  margin-bottom: 12px;
+}
+.panel > p {
+  margin: 12px 0;
+}
+.directory-list {
+  margin-top: 18px;
+}
+.panel > .field + .field {
+  margin-top: 18px;
+}
+.directory-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 23px 0;
+  border-bottom: 1px solid #ffffff22;
+}
+.directory-row:last-child {
+  border-bottom: 0;
+}
+.directory-row > div {
+  min-width: 0;
+}
+.directory-row p {
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.row-actions {
+  gap: 14px;
+}
+.row-actions .text-button {
+  min-height: 44px;
+}
+.alert-row h3 {
+  margin-top: 12px;
+}
+.danger {
+  color: #ffb4b4;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 22px 0;
+}
+.stat-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+  border-bottom: 1px solid #ffffff20;
+  min-width: 0;
+}
+.stat-cell span {
+  color: #bbb;
+  font-size: 14px;
+}
+.stat-cell strong {
+  font-size: clamp(22px, 2.1vw, 34px);
+  font-weight: 500;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.risk-distribution {
+  margin: 28px 0;
+}
+.risk-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 35px;
+  gap: 20px;
+  align-items: center;
+  margin: 15px 0;
+  font-size: 14px;
+}
+.risk-track {
+  height: 8px;
+  background: #ffffff15;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.risk-track i {
+  display: block;
+  height: 100%;
+  background: #c3d4a5;
+  border-radius: inherit;
+}
+.risk-row:nth-child(3) i,
+.risk-row:nth-child(4) i {
+  background: #e6a49a;
+}
+.table-scroll {
+  width: 100%;
+  overflow: auto;
+  margin-top: 20px;
+  border-radius: 8px;
+}
+.table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+}
+.table-scroll th {
+  color: #bcbcbc;
+  font-weight: 500;
+}
+.table-scroll th,
+.table-scroll td {
+  padding: 16px 14px;
+  border-bottom: 1px solid #ffffff20;
+  white-space: nowrap;
+}
+.table-scroll td small {
+  display: block;
+  margin-top: 6px;
+  color: #bbb;
+}
+.table-scroll tr:last-child td {
+  border-bottom: 0;
+}
+.empty-state {
+  padding: 25px 0;
+  color: #c4c4c4;
+}
+.performance-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px;
+  margin-top: 26px;
+}
+.performance-charts > section,
+.data-chart {
+  min-width: 0;
+}
+.performance-charts > p {
+  grid-column: 1 / -1;
+  font-size: 14px;
+}
+.data-chart {
+  height: 250px;
+  width: 100%;
+  margin-top: 18px;
+}
+.task-schedule {
+  max-height: 360px;
+  overflow: auto;
+  margin-top: 20px;
+  padding-right: 12px;
+}
+.task-row {
+  display: grid;
+  grid-template-columns: 145px minmax(50px, 1fr) 140px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 13px;
+}
+.task-row small {
+  display: block;
+  color: #aaa;
+  font-size: 11px;
+}
+.task-track {
+  height: 8px;
+  background: #ffffff12;
+  overflow: hidden;
+  border-radius: 4px;
+}
+.task-track i {
+  height: 100%;
+  min-width: 2px;
+  display: block;
+  background: #d2e5b0;
+}
+.architecture-flow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 30px 0;
+  gap: 20px;
+}
+.architecture-flow small {
+  color: #d2e5b0;
+}
+.architecture-flow h3 {
+  margin-top: 12px;
+  font-size: 17px;
+}
+.explanation-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin: 28px 0;
+}
+.explanation-grid p {
+  margin-top: 12px;
+}
+@media (max-width: 850px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .directory-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .performance-charts {
+    grid-template-columns: 1fr;
+  }
+  .architecture-flow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 540px) {
+  .form-grid,
+  .explanation-grid {
+    grid-template-columns: 1fr;
+  }
+  .account-bar {
+    align-items: flex-start;
+  }
+  .account-bar nav {
+    gap: 14px;
+  }
+  .stat-cell {
+    padding: 16px 10px;
+  }
+  .risk-row {
+    grid-template-columns: 118px 1fr 20px;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .task-row {
+    grid-template-columns: 95px 1fr;
+  }
+  .task-row > small {
+    grid-column: 2;
+  }
+  .form-actions .button {
+    width: 100%;
+  }
+}

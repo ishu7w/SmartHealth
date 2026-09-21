@@ -11,12 +11,24 @@ import PatientAnalysis from "./pages/PatientAnalysis";
 import Monitoring from "./pages/Monitoring";
 import ParallelDemo from "./pages/ParallelDemo";
 import About from "./pages/About";
+import Account from "./pages/Account";
+import Patients from "./pages/Patients";
+import Alerts from "./pages/Alerts";
+import Doctors from "./pages/Doctors";
+import { AccountBar, RequireAccount } from "./components/Session";
 export default function App() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   const main = useRef(null);
   const page =
-    navigation.find(([path]) => path === pathname)?.[1] || "Page not found";
+    navigation.find(([path]) => path === pathname)?.[1] ||
+    {
+      "/patients": "Patients",
+      "/alerts": "Alerts",
+      "/doctors": "Doctors",
+      "/account": "Account",
+    }[pathname] ||
+    "Page not found";
   useEffect(() => {
     document.title = `${page} · SmartHealth`;
     setOpen(false);
@@ -35,24 +47,26 @@ export default function App() {
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       if (reduceMotion()) return;
-      SplitText.create(main.current.querySelector("h1"), {
-        type: "words",
-        aria: "auto",
-        onSplit(self) {
-          return gsap.fromTo(
-            self.words,
-            { y: 24, opacity: 0 },
-            {
-              y: 0,
-              opacity: 1,
-              duration: 0.85,
-              stagger: 0.065,
-              ease: "settle",
-              clearProps: "transform,opacity",
-            },
-          );
-        },
-      });
+      const heading = main.current.querySelector("h1");
+      if (heading)
+        SplitText.create(heading, {
+          type: "words",
+          aria: "auto",
+          onSplit(self) {
+            return gsap.fromTo(
+              self.words,
+              { y: 24, opacity: 0 },
+              {
+                y: 0,
+                opacity: 1,
+                duration: 0.85,
+                stagger: 0.065,
+                ease: "settle",
+                clearProps: "transform,opacity",
+              },
+            );
+          },
+        });
       gsap.fromTo(
         main.current.querySelector(".page-stack") ||
           main.current.firstElementChild,
@@ -76,11 +90,22 @@ export default function App() {
         toggle={() => setOpen((value) => !value)}
       />
       <main ref={main} id="main-content" tabIndex={-1}>
+        <AccountBar />
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/analysis" element={<PatientAnalysis />} />
-          <Route path="/monitoring" element={<Monitoring />} />
-          <Route path="/parallel" element={<ParallelDemo />} />
+          <Route path="/account" element={<Account />} />
+          <Route element={<RequireAccount />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/analysis" element={<PatientAnalysis />} />
+            <Route path="/monitoring" element={<Monitoring />} />
+            <Route path="/patients" element={<Patients />} />
+            <Route path="/alerts" element={<Alerts />} />
+          </Route>
+          <Route element={<RequireAccount staff />}>
+            <Route path="/parallel" element={<ParallelDemo />} />
+          </Route>
+          <Route element={<RequireAccount admin />}>
+            <Route path="/doctors" element={<Doctors />} />
+          </Route>
           <Route path="/about" element={<About />} />
           <Route
             path="*"

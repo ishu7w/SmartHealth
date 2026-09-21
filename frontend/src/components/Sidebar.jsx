@@ -33,6 +33,10 @@ export default function Sidebar({ open, close, toggle }) {
   useLayoutEffect(() => {
     const move = () => {
       const active = bar.current?.querySelector(".active");
+      if (!active) {
+        gsap.set(marker.current, { opacity: 0 });
+        return;
+      }
       if (active)
         gsap.to(marker.current, {
           x: active.offsetLeft,

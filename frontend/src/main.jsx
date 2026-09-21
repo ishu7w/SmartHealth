@@ -5,11 +5,15 @@ import "@fontsource/instrument-serif/latin-400.css";
 import "@fontsource/instrument-serif/latin-400-italic.css";
 import "lenis/dist/lenis.css";
 import "./index.css";
+import "./workspace.css";
 import App from "./App";
+import { SessionProvider } from "./components/Session";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <SessionProvider>
+        <App />
+      </SessionProvider>
     </BrowserRouter>
   </React.StrictMode>,
 );

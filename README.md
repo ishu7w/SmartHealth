@@ -1,261 +1,157 @@
 # Integrated Smart Healthcare Computing Solution
 
-**SmartHealth** is a complete academic PBL for **Computer Architecture and Parallel Processing**. It demonstrates healthcare parameter analysis, simulated monitoring, sequential execution, concurrent execution with worker threads, and measured speedup.
+A complete college PBL application for **Computer Architecture & Parallel Processing (CAPP)**, aligned with **SDG 3 — Good Health and Well-being**.
 
-This is an educational prototype, not a clinical system. No authentication, machine learning, connected medical sensors, or medical recommendations are included.
+The application combines patient accounts, persistent health records, threshold alerts, and a Java multithreading laboratory. The original SmartHealth interface is retained: dark artwork, glass surfaces, Instrument Serif headings, GSAP transitions, Lenis scrolling, and responsive navigation.
 
-## Features
+**Educational prototype only. It does not diagnose, prescribe, monitor medical devices, or contact emergency services. Use synthetic information for demonstrations.**
 
-- **Dashboard:** clearly labeled sample vitals, selectable overview charts, actual API/database connection status, and links into the two main workflows.
-- **Patient Analysis:** validated patient/vital form, symptom checkboxes, individual rule results, overall score and risk status, explicit SQLite save, recent history, and record detail expansion.
-- **Health Monitoring:** synthetic readings every three seconds, pause/resume, three responsive trend charts, maximum 20 retained readings.
-- **Parallel Processing:** sequential, parallel, and comparison runs; backend-measured task start/end/durations; common-scale timelines; five worker lanes; optional measured replay at quarter speed; comparison bar chart, speedup, and time reduction.
-- **About:** objectives, workflow, stack, core concepts, and API documentation link.
-- Responsive navigation and layouts, keyboard focus, reduced-motion support, loading/error/empty/success states, retry actions, and centralized API calls.
+## What is implemented
 
-## Technology stack
+| Area | Features |
+|---|---|
+| Patient | Registration, login, profile, six vital signs, saved history, risk scores, own alerts |
+| Doctor | Patient search, risk filters, latest readings, full profile details, recent history, alert acknowledgement and resolution |
+| Administrator | Patient creation/edit/deletion, doctor account creation/access revocation, statistics, performance experiments |
+| Monitoring | Periodic synthetic measurements, scenario selection, chart, persisted readings and threshold alerts |
+| Processing | Actual sequential loop and `ExecutorService` thread pool; 100, 500, 1,000, 5,000 or 10,000 records |
+| Measurement | Wall time, process CPU time, active tasks, thread schedule, speedup, time saved, result checksum verification |
+| Charts | Latest risk distribution, recent records/alerts, execution time vs dataset size, speedup vs size, mode comparison |
+| Access control | BCrypt passwords, server sessions, CSRF protection, role checks, patient ownership checks, immediate disabled-account revocation on next request |
 
-| Layer | Technologies |
-| --- | --- |
-| Frontend | React 19, Vite, React Router, Tailwind CSS 4, Lucide React, Recharts |
-| Motion | GSAP SplitText, CustomEase, Flip, DrawSVGPlugin and Lenis (reduced-motion alternatives) |
-| Backend | Python 3.10+, FastAPI, Pydantic, Uvicorn |
-| Concurrency | Standard-library `concurrent.futures.ThreadPoolExecutor` |
-| Storage | Standard-library SQLite |
-| Verification | Python unittest, urllib API smoke checks, Playwright with local Chrome |
+The default database is **MySQL**. An optional H2 profile allows local development without a database installation. The previous Python implementation is retained only in `legacy/` and is not used by the rebuilt application. The browser-only fallback and illustrative benchmark numbers have been removed.
 
-The interface follows the supplied Observe reference: dark liquid glass, monochrome controls, locally bundled Instrument Serif headlines, and the original background artwork with a slow, centered GSAP zoom (2.5% over 50 seconds). GSAP animates headlines, sections, selections, diagrams, values, and saved-record expansion. The Pause motion control and OS reduced-motion preference preserve a static, usable experience. Dark, opaque work surfaces and larger text improve readability without costly live backdrop blur. The app remains functional on a black canvas if the background image cannot load.
+## Quick start with MySQL and Docker
 
-## Architecture
+Requires Docker with Compose.
 
-```text
-React UI → centralized API client → FastAPI / Pydantic
-                                  ├─ Five independent rule functions → score + status
-                                  ├─ Sequential runner → measured task timings
-                                  ├─ ThreadPoolExecutor(5) → measured task timings
-                                  └─ Explicit save → SQLite → recent/detail endpoints
-
-Monitoring: browser-only simulated readings → capped history → Recharts
+```sh
+cp .env.example .env
+# Edit .env: set your database passwords and an admin email/password.
+docker compose up --build
 ```
 
-The dashboard uses illustrative data. API status is a real health check. Demo execution results always come from the backend, never fixed numbers or fabricated frontend timing.
+Open **http://localhost:8080**. The Docker image serves the React application and Java API together, so session cookies and CSRF tokens share one origin. MySQL data is retained in the `mysql-data` volume. No default administrator password is embedded in the app.
 
-## Folder structure
+`ADMIN_EMAIL` and `ADMIN_PASSWORD` create an administrator on the first startup for that email. Use a password of 12–72 characters. Later changes to those variables do not reset an existing account. Sign in as administrator to create doctor accounts; patients self-register.
 
-```text
-.
-├── frontend/
-│   ├── src/
-│   │   ├── components/       # Layout, vitals, chart, history, smooth scroll, shared UI
-│   │   ├── pages/            # Dashboard, analysis, monitoring, parallel demo, about
-│   │   ├── services/api.js   # All JSON API calls and response validation
-│   │   ├── data/sampleData.js
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css
-│   ├── tests/browser-check.mjs
-│   ├── .env.example
-│   └── package.json
-├── backend/
-│   ├── analysis/             # Heart, pressure, oxygen, temperature, glucose, score
-│   ├── parallel/             # Timed workload, sequential and concurrent runners
-│   ├── database/database.py  # Table creation and parameterized persistence
-│   ├── tests/                # Rule/scheduling tests and API smoke test
-│   ├── main.py
-│   ├── schemas.py
-│   └── requirements.txt
-├── PRODUCT.md
-├── DESIGN.md
-└── .impeccable/              # Design concepts, review, and verification screenshots
+`docker compose down` stops the services while retaining records. Deleting the database volume deletes those records. For a public deployment, put the application behind HTTPS, set `COOKIE_SECURE=true`, and provide secrets through the hosting platform.
+
+## Local development
+
+Requirements: **Java 21**, **Maven 3.9+**, **Node.js 22**, and MySQL 8.4+ (or the optional H2 demo profile). Set `JAVA_HOME` to a Java 21 installation if another Java version is the system default.
+
+### Backend with MySQL
+
+Create an empty database and a dedicated user with access to it. Export the connection and bootstrap settings in your shell:
+
+```sh
+export DATABASE_URL='jdbc:mysql://localhost:3306/smarthealth'
+export DATABASE_USER='smarthealth'
+export DATABASE_PASSWORD='your-database-password'
+export ADMIN_EMAIL='your-admin-email@example.com'
+export ADMIN_PASSWORD='your-admin-password-at-least-12-characters'
+mvn -f backend/pom.xml spring-boot:run
 ```
 
-## Installation and running
+The backend listens on port **8080**. JPA creates/updates the academic schema. For deployment to a maintained production system, replace automatic schema updates with reviewed database migrations.
 
-Prerequisites: Python 3.10 or later and a current Node.js LTS with npm. The build was verified with Python 3.14 and Node.js 25.8.
+### Optional offline database
 
-Open **two terminals** in the project folder.
+For a classroom demo without MySQL, set the admin variables above, then run:
 
-### Backend
-
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```sh
+mvn -f backend/pom.xml spring-boot:run -Dspring-boot.run.profiles=demo
 ```
 
-On Windows, activate with `.venv\Scripts\activate` and use `python` instead of `python3` where needed.
-
-The SQLite table is created automatically during startup. Its default location is `backend/database/healthcare.db`. No migrations or manual seed step is needed. The history starts empty until a record is saved.
+This stores H2 data under `backend/data/` when started using the command above. It is a separate database from MySQL. The active database profile is explicit; the application never silently switches storage when an API call fails.
 
 ### Frontend
 
-```bash
-cd frontend
-npm install
-npm run dev
+In another terminal:
+
+```sh
+npm ci --prefix frontend
+npm run dev --prefix frontend
 ```
 
-## Deployment
+Open **http://localhost:5173**. Vite proxies `/api` to port 8080. The optional `frontend/.env` should use `VITE_API_URL=/api`; cookies and API calls are designed for the same origin. No API keys belong in frontend environment variables.
 
-The production frontend is deployed on Vercel. The root `vercel.json` builds
-`frontend/` and serves its Vite output with SPA rewrites. When the app is
-opened on a hosted origin without `VITE_API_URL`, analysis, processing, and
-history use the browser's local storage so the academic demo remains usable
-without a hosted database. Local development continues to use the FastAPI
-service on port 8000.
+### Build a combined executable JAR
 
-Open [SmartHealth](http://localhost:5173). API documentation is available at [FastAPI Swagger UI](http://localhost:8000/docs).
-
-### Environment options
-
-- Copy `frontend/.env.example` to `frontend/.env` only if changing the backend URL. `VITE_API_URL` defaults to `http://localhost:8000`. Restart Vite after changing it.
-- Backend `CORS_ORIGINS` is a comma-separated list; defaults include localhost and 127.0.0.1 on ports 5173 (dev) and 4173 (preview).
-- Backend `SMARTHEALTH_DB` overrides the database file path, useful for isolated tests.
-- For another device on the LAN, expose Uvicorn on `0.0.0.0`, point `VITE_API_URL` to the server's LAN address, and add the frontend LAN origin to CORS. Browser `localhost` refers to the device opening the page.
-- The app has no authentication by design. Use synthetic data for classroom demonstrations.
-
-### Production build
-
-```bash
-cd frontend
-npm run build
-npm run preview
+```sh
+sh scripts/build.sh
+java -jar backend/target/smarthealth-2.0.0.jar
 ```
 
-The built frontend is in `frontend/dist`. Preview normally uses port 4173, which is included in the default backend CORS origins. A production static host needs an SPA fallback to `index.html` for React Router routes. The backend is a separate process.
+The same database/admin environment variables apply. The combined JAR serves the UI at port 8080 and supports direct navigation to every application page.
 
-## Suggested one-minute demonstration
+The historical `vercel.json` still builds the static frontend. **A static Vercel deployment alone cannot run this Java/MySQL system.** Use the combined container/JAR on a Java-capable host, or configure a same-origin reverse proxy to that backend before using a separately hosted frontend. A missing backend is shown as a connection error, never replaced with fake results. This rebuild does not automatically redeploy an existing public site.
 
-1. Open Dashboard: explain that displayed vitals are labeled sample data.
-2. Open Patient Analysis → Use sample data → Analyze Health. Show five transparent results and the score.
-3. Select Save Analysis, then open the saved row to demonstrate SQLite persistence.
-4. Open Parallel Processing → Run Comparison. Point out sequential stair-step timing versus concurrent task starts.
-5. Explain speedup and time reduced; replay the measured worker schedule.
-6. Open Health Monitoring and pause/resume the explicitly simulated stream.
+## Classroom walkthrough
 
-## API endpoints
+1. Register a patient, create a profile, and enter normal example readings: HR 75, BP 115/75, temperature 36.8°C, SpO₂ 98%, glucose 90, breathing 16/min.
+2. Save another reading with SpO₂ 88%. Its educational risk becomes Critical and a low-oxygen alert appears.
+3. Sign in as a doctor created by an administrator. Find that patient, inspect history, acknowledge and resolve the alert.
+4. Open Monitoring, select the patient, and start the critical oxygen scenario. Pause it after a few readings. These are explicitly marked as simulations in history.
+5. Open Processing as doctor/admin. Compare the supported dataset sizes using the same seed and thread count. Repeat each run; inspect charts, schedule, CPU information, and the history table.
+6. Explain why parallel execution may be faster for larger workloads and slower for smaller ones. Do not promise a speedup on every machine.
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/` | API identity |
-| GET | `/api/health` | Server and SQLite connection status |
-| POST | `/api/analyze` | Fast rule-based analysis without artificial delays |
-| POST | `/api/analyze/sequential` | Sequential demo with per-task delay/timing |
-| POST | `/api/analyze/parallel` | Five-worker concurrent demo with delay/timing |
-| POST | `/api/analyze/compare` | Sequential, then parallel, plus measured formulas |
-| POST | `/api/patients` | Recompute trusted result and save submitted patient; returns 201 |
-| GET | `/api/patients` | Latest 20 records; UI displays up to 8 |
-| GET | `/api/patients/{id}` | Saved patient and complete analysis; 404 if absent |
+## Benchmark methodology
 
-All POST routes accept the same patient structure:
+`ParallelHealthProcessor` generates an immutable seeded dataset. Each task performs the same six vital checks and a disclosed CPU-only mixing loop of 12,000 iterations. That loop models computational work for teaching; it is not a clinical algorithm. Its result contributes to a 64-bit checksum, preventing the calculation from being discarded as unused.
 
-```json
-{
-  "name": "Demo Patient",
-  "age": 28,
-  "gender": "Female",
-  "heart_rate": 72,
-  "systolic_bp": 118,
-  "diastolic_bp": 78,
-  "spo2": 98,
-  "temperature": 98.6,
-  "glucose": 96,
-  "symptoms": []
-}
-```
+- Sequential mode loops through the dataset on one thread.
+- Parallel mode submits one `Callable` per record to a fixed pool and collects every `Future`. The pool is shut down in a `finally` block.
+- Timing uses `System.nanoTime()`. Dataset generation and database writes are outside the timer. Parallel timing includes pool creation, submission, and result collection; shutdown occurs afterward.
+- A 50-record sequential warm-up precedes the measured run. Comparisons measure sequential first, then parallel. JVM compilation, order, other applications, CPU limits, and scheduling overhead can influence results.
+- Both modes must produce identical checksums before a comparison is saved. The server enforces this using full-width Java integers; the browser receives checksums as strings to preserve precision.
+- `speedup = sequentialTime / parallelTime`; `timeSaved = sequentialTime - parallelTime`. Negative time saved is displayed honestly.
+- Only one benchmark runs per server instance at a time. Other attempts receive HTTP 409. Thread count is limited to 1–32, defaulted in the UI to the server's available logical processors (capped at 32).
+- Thread charts show actual timings for the first 100 records; every record is still processed. CPU time is process-wide, includes other JVM work, and may have coarse resolution. CPU load is a recent sample, not a per-run utilization measurement.
+- Benchmark charts use the latest comparison per dataset size from the most recent 100 saved runs. They start empty. Check thread counts before comparing points.
 
-Gender accepts Female, Male, Other, or Prefer not to say. Symptoms accept Fever, Headache, Chest Pain, Breathing Difficulty, Fatigue, and Dizziness. Names are trimmed; age, vital bounds, and systolic greater than diastolic are validated on the backend. Invalid submissions return HTTP 422. The save endpoint accepts input parameters, not a client-supplied score, and recomputes the score before persistence.
+## Risk rules
 
-Each individual result contains `value`, `status`, `message`, and `score`. Demo results additionally contain exact floating-point `total_ms`, per-task `duration_ms`, `start_ms`, `end_ms`, actual thread names, worker count, and `simulated_workload: true`.
+All thresholds are simplified teaching rules, not validated medical guidance. Each normal parameter scores 0, warning 60, critical 100. The rounded mean is raised to at least 26 for any warning or 76 for any critical parameter. This gives an explainable score without hiding an isolated critical signal.
 
-## Educational analysis rules
+| Score | Status |
+|---|---|
+| 0–25 | Normal |
+| 26–50 | Attention Required |
+| 51–75 | High Risk |
+| 76–100 | Critical |
 
-These deliberately simplified thresholds are **teaching examples, not medical guidance**. They do not account for individual context, age, medications, pregnancy, altitude, activity, or measurement quality. Age and gender are stored context and do not modify these rules.
-
-| Parameter | Normal demo range | Warning demo range | Critical demo range |
-| --- | --- | --- | --- |
-| Heart rate | 60–100 BPM | 50–59.99 or 100.01–120 | Below 50 or above 120 |
-| Blood pressure | Systolic 90–119.99 **and** diastolic 60–79.99 | Any other noncritical combination | Systolic below 80 or ≥180; diastolic below 50 or ≥120 |
-| SpO₂ | ≥95% | 90 to below 95% | Below 90% |
-| Temperature | 97–99.5°F | 95 to below 97; above 99.5 through 102.2°F | Below 95 or above 102.2°F |
-| Fasting glucose | 70 to below 100 mg/dL | 54 to below 70; 100 to below 180 | Below 54 or ≥180 |
-
-Normal = 100, Warning = 65, Critical = 25. **Overall score is the rounded arithmetic mean of the five scores.** The normal sample scores 100, consistent with these rules.
-
-Risk is High Risk if any vital is Critical or if Chest Pain/Breathing Difficulty is reported. Otherwise any warning or reported symptom produces Needs Attention; otherwise Healthy. This prevents a critical individual result from being hidden by a high average. Symptoms affect status but do not change the numeric vital score.
-
-## Parallel processing and academic integrity
-
-Both runners execute the same five functions using the same input and ordered delay list: 200, 240, 180, 220, and 160 ms. Delays exist only in `parallel/workload.py`; ordinary analysis calls the rule functions directly.
-
-Sequential calls each timed task in order. Parallel submits them to `ThreadPoolExecutor(max_workers=5)` and joins all futures. The timer includes pool startup, waiting, result collection, and shutdown. Per-task timings cover the task's own delay plus rule execution. Start/end offsets share the run's timer origin.
-
-`time.sleep` simulates waiting work and releases the Python GIL. The observed reduction demonstrates concurrency for independent wait-heavy workloads. It is **not** a universal claim that Python threads parallelize CPU-bound Python calculations. OS threads are not dedicated physical CPU cores. The UI makes this distinction explicit.
-
-```text
-Speedup = Sequential Time / Parallel Time
-Time Reduced (%) = (1 - Parallel Time / Sequential Time) × 100
-```
-
-Run Comparison performs sequential first, then parallel, in one backend request. Values change with scheduling and system load. The UI never promises a fixed speedup. The optional animation is a **quarter-speed replay of measured timestamps**, not live processor telemetry.
-
-## Storage
-
-One `patient_analysis` table stores id, name, age, gender, six numeric vital fields, symptoms (JSON text), health_score, risk_level, and UTC created_at. SQL writes and lookups are parameterized. Database failures return a friendly HTTP 503 message. Restarting the backend preserves records. Do not commit the SQLite database.
+Exact parameter thresholds and boundary tests are in `HealthAnalyzer.java` and `HealthcareIntegrationTest.java`. Alert states are New → Acknowledged → Resolved; staff can also resolve directly. A resolved alert cannot be reopened through the transition endpoints.
 
 ## Verification
 
-Backend rule and scheduling tests:
+```sh
+# Backend integration, authorization, validation, risk boundaries, and all dataset sizes
+mvn -f backend/pom.xml test
 
-```bash
-cd backend
-source .venv/bin/activate
-python -m unittest discover -s tests -v
-```
+# Frontend production compilation
+npm run build --prefix frontend
 
-API smoke test (uses a separate disposable test database):
-
-```bash
-cd backend
-source .venv/bin/activate
-SMARTHEALTH_DB=/tmp/smarthealth-api-qa.db uvicorn main:app --port 8001
-```
-
-In another terminal:
-
-```bash
-cd backend
-.venv/bin/python tests/api_smoke.py
-```
-
-`TEST_API_URL` can change the test URL. The smoke test creates a synthetic record in that test database. It covers all nine endpoints, CORS, validation, missing IDs, save/list/detail, result equality, and speedup formulas.
-
-Browser checks require both normal development servers and locally installed Google Chrome:
-
-```bash
+# End-to-end: start the app with a test-only administrator first
 cd frontend
-node tests/browser-check.mjs
+npx playwright install chromium
+E2E_ADMIN_EMAIL='admin@example.test' E2E_ADMIN_PASSWORD='local-test-password-123' npm run test:e2e
 ```
 
-The checks cover all five pages at 375/768/1024/1440 pixels, overflow, analysis, save/history/detail, monitoring updates and pause/resume, sequential/parallel/comparison/replay, mobile navigation, offline retry, reduced motion, and browser console errors. They create a synthetic Browser QA Patient record in the running application database.
+The end-to-end test uses a dedicated test/demo database and creates synthetic patient/doctor accounts. It covers registration, profiles, readings, critical alerts, monitoring, role access, a real benchmark, and pages at 375/768/1440px. Use `PLAYWRIGHT_CHANNEL=chrome` to test with installed Chrome, and `APP_URL=http://localhost:8080` to test the combined JAR.
 
-## Screenshots
+To run the backend tests against a **disposable MySQL database**, set `TEST_DATABASE_URL`, `TEST_DATABASE_USER`, and `TEST_DATABASE_PASSWORD`. **The test profile creates and drops tables, so never point it at your application database.** CI runs the same suite on MySQL and then exercises the browser flow.
 
-Running the browser checks generates local UI captures in `.impeccable/observe-screenshots/`. These generated files are excluded from Git:
+## Project structure
 
-- `dashboard-1440.png` and `dashboard-375.png`
-- `analysis-1440.png` and `analysis-375.png`
-- `parallel-results-1440.png`
-- Monitoring, parallel, and about captures at all four requested breakpoints
+```text
+backend/                  Java 21 / Spring Boot application and integration tests
+frontend/                 Existing React UI, new authenticated pages and browser tests
+docs/                     Architecture, API reference, requirements and academic report
+scripts/build.sh          Build the React UI into an executable Java application
+Dockerfile, compose.yaml  Combined application plus persistent MySQL
+legacy/                   Archived Python backend and former UI verification scripts
+```
 
-Use the generated screenshots in the academic report after reviewing them. Browser tests use synthetic patient records.
-
-## Future improvements
-
-Useful academic extensions include CSV export, explicitly separate CPU-bound process-pool experiments, repeated benchmark runs with variance, and configurable educational thresholds. These are future ideas, not present capabilities.
-
-## Educational disclaimer
-
-This application is an educational prototype developed for academic demonstration and is not intended for medical diagnosis or treatment. All readings in demonstrations are synthetic. Scores, statuses, and thresholds are not medical advice.
+Read [Architecture](docs/ARCHITECTURE.md), [API reference](docs/API.md), and [PBL report](docs/PBL_REPORT.md) for presentation and implementation details. The supplied prompt ends at the beginning of section 15; the About page and report cover the stated computer architecture concepts without assuming missing requirements.

@@ -1,173 +1,116 @@
-import {
-  ArrowRight,
-  ClipboardPlus,
-  Activity,
-  Cpu,
-  FileCheck2,
-  Gauge,
-  Database,
-  ExternalLink,
-} from "lucide-react";
-import { Link } from "react-router-dom";
-import { Disclaimer } from "../components/UI";
-import SignalDiagram from "../components/SignalDiagram";
-const steps = [
-  ["Patient Input", ClipboardPlus],
-  ["Health Data Analysis", Activity],
-  ["Parallel Processing", Cpu],
-  ["Result Generation", FileCheck2],
-  ["Health Score", Gauge],
-  ["Data Storage", Database],
-];
+import { PageHeading, Disclaimer } from "../components/UI";
 export default function About() {
   return (
-    <div className="page-stack about-page">
-      <header className="about-heading">
-        <span className="about-emblem">
-          <Activity size={35} strokeWidth={1.5} />
-        </span>
-        <h1>
-          Built to make
-          <br />
-          the invisible <em>understandable.</em>
-        </h1>
-        <p>Integrated Smart Healthcare Computing Solution</p>
-        <span className="about-subject">
-          Computer Architecture and Parallel Processing
-        </span>
-      </header>
-      <section className="about-story">
-        <div>
-          <h2>
-            A familiar subject.
-            <br />A fundamental idea.
-          </h2>
-        </div>
-        <div>
-          <p>
-            Healthcare gives computing a human context. A heart rate, an oxygen
-            reading, a temperature—each can be understood independently.
-          </p>
-          <p>
-            SmartHealth turns that independence into a practical question: what
-            happens when we process those signals together?
-          </p>
-          <p>
-            Enter patient parameters, inspect clear rules, and compare measured
-            execution times. A focused academic prototype, designed to make
-            concurrency visible.
-          </p>
-        </div>
+    <div className="page-stack">
+      <PageHeading
+        title="Healthcare meets computing."
+        description="Integrated Smart Healthcare Computing Solution · Computer Architecture & Parallel Processing"
+      />
+      <section className="panel">
+        <span className="sample-label">SDG 3 · Good Health and Well-being</span>
+        <h2>A platform built for understanding.</h2>
+        <p>
+          Patients track their own readings. Doctors review patient histories
+          and respond to alerts. Administrators manage access and inspect system
+          performance. The same rule-based analyzer powers saved readings and
+          synthetic benchmark tasks.
+        </p>
       </section>
-      <section className="compute-feature about-compute">
-        <div className="compute-copy">
-          <Cpu size={28} strokeWidth={1.4} />
-          <h2>
-            One input.
-            <br />
-            Five perspectives.
-          </h2>
-          <p>
-            ThreadPoolExecutor schedules independent checks across five worker
-            threads. Controlled waiting makes their overlap easy to observe.
-          </p>
-          <Link className="button light" to="/parallel">
-            Explore the processing demo <ArrowRight size={16} />
-          </Link>
-        </div>
-        <SignalDiagram />
-      </section>
-      <section className="workflow-section">
-        <div className="section-heading">
-          <h2>From input to insight.</h2>
-          <p>The project workflow</p>
-        </div>
-        <div className="workflow">
-          {steps.map(([name, Icon], i) => (
-            <div className="workflow-step" key={name}>
-              <span className="workflow-number">0{i + 1}</span>
-              <Icon size={24} strokeWidth={1.5} />
-              <strong>{name}</strong>
-              {i < 5 && <ArrowRight className="workflow-arrow" size={15} />}
+      <section className="panel">
+        <h2>From a reading to a result</h2>
+        <div className="architecture-flow">
+          {[
+            "React interface",
+            "Spring Security session",
+            "Spring Boot REST API",
+            "Health analysis",
+            "MySQL records & alerts",
+          ].map((step, i) => (
+            <div key={step}>
+              <small>0{i + 1}</small>
+              <h3>{step}</h3>
             </div>
           ))}
         </div>
-        <p className="small muted">
-          Standard analysis runs directly. The dedicated demo compares
-          scheduling. Saving a record is always an explicit action.
+        <p>
+          Patient ownership and staff roles are enforced by the server.
+          Passwords are hashed with BCrypt, mutations require a CSRF token, and
+          patient records stay in the database.
         </p>
       </section>
-      <section className="about-details">
-        <div>
-          <h2>Thoughtfully simple.</h2>
-          <p>Every part of the stack has a clear job.</p>
-          <dl className="tech-list">
-            {[
-              ["React + Vite", "The responsive interface"],
-              ["Tailwind CSS + Lucide", "Layout and precise iconography"],
-              ["FastAPI + Python", "Validated inputs and readable rules"],
-              ["SQLite", "Local analysis records"],
-              ["ThreadPoolExecutor", "Independent worker scheduling"],
-              ["Recharts", "Signals and measured comparisons"],
-              ["GSAP + Lenis", "Fluid feedback and motion"],
-            ].map(([title, desc]) => (
-              <div key={title}>
-                <dt>{title}</dt>
-                <dd>{desc}</dd>
-              </div>
-            ))}
-          </dl>
+      <section className="panel">
+        <h2>Two ways to process a dataset</h2>
+        <div className="explanation-grid">
+          <article>
+            <h3>Sequential execution</h3>
+            <p>
+              A single thread processes each patient in order. The next record
+              waits until the current record finishes. Wall-clock time is
+              measured with System.nanoTime().
+            </p>
+          </article>
+          <article>
+            <h3>Parallel execution</h3>
+            <p>
+              ExecutorService schedules one Callable per patient across a fixed
+              thread pool. Multiple CPU cores can execute independent tasks
+              concurrently. Futures collect every result before the timer stops.
+            </p>
+          </article>
+          <article>
+            <h3>Shared memory & scheduling</h3>
+            <p>
+              Workers read an immutable dataset and produce independent outputs.
+              An atomic counter reports active tasks. Thread scheduling, memory
+              access, pool creation, and task submission all add overhead.
+            </p>
+          </article>
+          <article>
+            <h3>Speedup & practical limits</h3>
+            <p>
+              Speedup is sequential time divided by parallel time. Amdahl’s law
+              limits gains when part of the work remains serial. More threads do
+              not guarantee better performance; CPU availability, JIT
+              compilation, and dataset size matter.
+            </p>
+          </article>
         </div>
-        <div>
-          <h2>The ideas behind it.</h2>
-          <p>Core concepts, ready to explain.</p>
-          <ul className="about-concepts">
-            {[
-              [
-                "Sequential processing",
-                "One check finishes before the next begins.",
-              ],
-              [
-                "Concurrency",
-                "Independent tasks overlap using separate worker threads.",
-              ],
-              [
-                "Performance measurement",
-                "A high-resolution timer measures each task and the full execution.",
-              ],
-              [
-                "Speedup",
-                "Sequential duration divided by concurrent duration.",
-              ],
-              [
-                "Rule-based health scoring",
-                "Five transparent checks with scores of 100, 65, or 25. Their average gives the score; critical findings or symptoms can raise the risk status.",
-              ],
-            ].map(([title, text]) => (
-              <li key={title}>
-                <strong>{title}</strong>
-                <p>{text}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <p>
+          The benchmark adds a disclosed, identical CPU-only calculation to each
+          record so computational work is visible at classroom dataset sizes. It
+          is an educational workload, not a measure of clinical processing
+          capacity. The first 50 records warm the analyzer; sample task timings
+          show the first 100 records. Process CPU time includes other JVM work.
+        </p>
       </section>
-      <section className="about-boundary">
-        <div>
-          <h2>Open the implementation.</h2>
-          <p>
-            No machine learning or connected medical sensors. Just independent
-            Python functions and a documented API you can inspect.
-          </p>
+      <section className="panel">
+        <h2>How the demonstration scores risk</h2>
+        <p>
+          Six parameters contribute equally. An in-range value scores 0, a
+          warning scores 60, and a critical value scores 100. The rounded mean
+          is raised to at least 26 for any warning and at least 76 for any
+          critical signal. This prevents a serious signal from disappearing in
+          an average.
+        </p>
+        <div className="stats-grid">
+          {[
+            ["0–25", "Normal"],
+            ["26–50", "Attention Required"],
+            ["51–75", "High Risk"],
+            ["76–100", "Critical"],
+          ].map(([score, label]) => (
+            <div className="stat-cell" key={score}>
+              <span>{label}</span>
+              <strong>{score}</strong>
+            </div>
+          ))}
         </div>
-        <a
-          className="button secondary"
-          href={`${(import.meta.env.VITE_API_URL || "http://localhost:8000").replace(/\/$/, "")}/docs`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          API documentation <ExternalLink size={15} />
-        </a>
+        <p>
+          Temperature is recorded in Celsius. Blood pressure uses both systolic
+          and diastolic values. Glucose uses a simplified fasting range.
+          Monitoring generates synthetic data; it does not connect to a medical
+          device or dispatch emergency services.
+        </p>
       </section>
       <Disclaimer />
     </div>

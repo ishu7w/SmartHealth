@@ -1,6 +1,6 @@
 # SmartHealth · Observe glass
 
-The current direction follows the user's Observe reference: a black canvas, monochrome interface, liquid glass materials, Instrument Serif headlines with italic emphasis, and dimmed full-screen artwork. It supersedes the earlier porcelain design. SmartHealth retains all five functional project pages.
+The current direction follows the user's Observe reference: a black canvas, monochrome interface, liquid glass materials, Instrument Serif headlines with italic emphasis, and dimmed full-screen artwork. It supersedes the earlier porcelain design. The Java/MySQL rebuild retains this visual foundation and the five primary navigation destinations, adding account, patient, alert, and doctor management surfaces in the same style.
 
 ## Material and type
 
@@ -12,7 +12,7 @@ Headlines use locally bundled Instrument Serif regular and italic. Body text, co
 
 The centered content column is 1160px, growing to 1240px on large displays. Floating capsule navigation becomes an expandable mobile menu below 768px. Hero headings are centered with generous space around them.
 
-Overview groups four vitals in one continuous surface. Analysis pairs a desktop inspector with a focused form. Monitoring presents one primary and two supporting charts. Processing brings sample inputs and measured execution lanes together, followed by comparison and worker replay. About uses editorial sections and a six-step workflow. Layouts have been checked from 320px through 1440px, with full screenshots at 375, 768, 1024, and 1440px.
+Overview groups saved patient/risk statistics in the original continuous glass surface. Analysis presents a patient selector, measurement form, risk result, and saved history. Monitoring charts generated readings. Processing presents dataset controls, measured task intervals, comparison charts, and experiment history. About explains architecture and scoring. New forms and tables use the original colors, typography, rounded surfaces, and spacing. Rebuild verification covers 375px, 768px, and 1440px widths; wide data tables scroll within their own containers.
 
 ## Motion
 
@@ -27,7 +27,7 @@ Overview groups four vitals in one continuous surface. Analysis pairs a desktop 
 
 ## Scope
 
-Preserve sample labels, simulated monitoring notices, educational rules, saved history, measured timing, and explanations of thread concurrency. The visual replay is not CPU telemetry. Avoid adding invented performance claims or clinical functionality.
+Preserve simulated monitoring notices, educational rules, saved history, measured timing, and explanations of thread concurrency. Scheduling bars use actual task intervals from the Java backend. JVM CPU load is a separate recent sample, not a per-experiment utilization measure. Avoid invented performance claims or clinical functionality.
 
 The background is served from `frontend/public/media/observe-still.jpg`, extracted from the original supplied film. The film is retained as a source asset but is not loaded by the app. If the image is unavailable, the black canvas and functioning tools remain, with a brief status notice. Fonts are included in the build.
 

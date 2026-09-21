@@ -3,9 +3,9 @@ import { AlertCircle, Check, LoaderCircle, Info } from "lucide-react";
 export function StatusBadge({ status = "Normal" }) {
   const tone = ["Critical", "High Risk", "Offline"].includes(status)
     ? "critical"
-    : ["Warning", "Needs Attention"].includes(status)
+    : ["Warning", "Needs Attention", "Attention Required"].includes(status)
       ? "warning"
-      : ["Waiting", "Paused"].includes(status)
+      : ["Waiting", "Paused", "No readings"].includes(status)
         ? "neutral"
         : "normal";
   return (
@@ -75,7 +75,7 @@ export function HealthScore({ score, risk }) {
   return (
     <div className="score">
       <div className="section-heading">
-        <h3>Overall Health Score</h3>
+        <h3>Educational risk score</h3>
         <StatusBadge status={risk} />
       </div>
       <div className="score-number">
@@ -85,7 +85,7 @@ export function HealthScore({ score, risk }) {
       <div
         className="score-track"
         role="progressbar"
-        aria-label="Overall health score"
+        aria-label="Educational risk score"
         aria-valuenow={score}
         aria-valuemin={0}
         aria-valuemax={100}
@@ -93,8 +93,8 @@ export function HealthScore({ score, risk }) {
         <span style={{ width: `${score}%` }} />
       </div>
       <p>
-        Average of five parameter scores. Critical findings and reported
-        symptoms can raise the overall risk status.
+        Higher means greater risk in this demonstration. Six parameters
+        contribute; any critical signal raises the overall score to at least 76.
       </p>
     </div>
   );
