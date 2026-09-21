@@ -13,3 +13,8 @@ __pycache__/
 .env.*
 !.env.example
 *.log
+target/
+data/
+.vercel/
+test-results/
+playwright-report/

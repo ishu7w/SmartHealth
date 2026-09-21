@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { gsap, reduceMotion } from "../lib/motion";
-const names = ["Heart rate", "Blood pressure", "Oxygen", "Temp.", "Glucose"];
+const names = ["Patient 1", "Patient 2", "Patient 3", "Patient 4", "Patient 5"];
 export default function SignalDiagram() {
   const root = useRef(null);
   useEffect(() => {
@@ -37,9 +37,9 @@ export default function SignalDiagram() {
       className="signal-diagram"
       ref={root}
       role="img"
-      aria-label="Conceptual diagram: patient input fans out to five independent health checks, which combine into one result"
+      aria-label="Conceptual diagram: a dataset fans out to independent patient tasks, which combine into one result"
     >
-      <div className="signal-source">Patient input</div>
+      <div className="signal-source">Patient dataset</div>
       <div className="signal-branches">
         <svg viewBox="0 0 500 38" preserveAspectRatio="none" aria-hidden="true">
           {[50, 150, 250, 350, 450].map((x) => (

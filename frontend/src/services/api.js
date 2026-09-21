@@ -1,134 +1,54 @@
-import {
-  analyzeLocal,
-  historyLocal,
-  recordLocal,
-  runLocalAnalysis,
-  saveLocal,
-} from "./localDemo";
+import axios from "axios";
 
-const configuredUrl = import.meta.env.VITE_API_URL?.trim();
-const hostname = typeof window === "undefined" ? "localhost" : window.location.hostname;
-const hostedDemo = !configuredUrl && !["localhost", "127.0.0.1"].includes(hostname);
-const BASE_URL = (configuredUrl || "http://localhost:8000").replace(/\/$/, "");
-const validAnalysis = (data) =>
-  data &&
-  Number.isFinite(data.health_score) &&
-  data.health_score >= 0 &&
-  data.health_score <= 100 &&
-  ["Healthy", "Needs Attention", "High Risk"].includes(data.risk_level) &&
-  ["heart_rate", "blood_pressure", "spo2", "temperature", "glucose"].every(
-    (key) => {
-      const item = data.results?.[key];
-      return (
-        item &&
-        ["Normal", "Warning", "Critical"].includes(item.status) &&
-        Number.isFinite(item.score) &&
-        typeof item.message === "string" &&
-        ["string", "number"].includes(typeof item.value)
-      );
-    },
-  );
-const validRun = (data) =>
-  validAnalysis(data) &&
-  Number.isFinite(data.total_ms) &&
-  data.total_ms > 0 &&
-  Array.isArray(data.tasks) &&
-  data.tasks.length === 5 &&
-  new Set(data.tasks.map((task) => task.parameter)).size === 5 &&
-  data.tasks.every(
-    (task) =>
-      task.parameter in data.results &&
-      Number.isFinite(task.start_ms) &&
-      Number.isFinite(task.end_ms) &&
-      Number.isFinite(task.duration_ms) &&
-      task.start_ms >= 0 &&
-      task.duration_ms >= 0 &&
-      task.end_ms >= task.start_ms,
-  );
-async function request(path, body, validate = () => true) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
+const client = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "/api",
+  withCredentials: true,
+  timeout: 120000,
+});
+let csrf;
+export async function request(path, method = "GET", data) {
   try {
-    const response = await fetch(`${BASE_URL}${path}`, {
-      method: body ? "POST" : "GET",
-      headers: { "Content-Type": "application/json" },
-      ...(body ? { body: JSON.stringify(body) } : {}),
-      signal: controller.signal,
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      const detail = Array.isArray(data.detail)
-        ? data.detail.map((item) => item.msg).join(" ")
-        : data.detail;
-      throw new Error(
-        detail || "The server could not complete this request. Please retry.",
-      );
+    if (method !== "GET" && !csrf) {
+      csrf = (await client.get("/auth/csrf")).data;
+      if (!csrf?.token || !csrf?.headerName) {
+        csrf = undefined;
+        throw new Error("Invalid CSRF response");
+      }
     }
-    if (!validate(data))
-      throw new Error(
-        "The server returned an unexpected response. Please retry.",
-      );
-    return data;
+    const response = await client.request({
+      url: path,
+      method,
+      data,
+      headers: method === "GET" ? {} : { [csrf.headerName]: csrf.token },
+    });
+    if (
+      response.status !== 204 &&
+      !response.headers["content-type"]?.includes("application/json")
+    )
+      throw new Error("Invalid API response");
+    return response.data;
   } catch (error) {
-    if (error instanceof TypeError || error.name === "AbortError")
-      throw new Error(
-        "Unable to connect to the healthcare analysis server. Check that the backend is running and retry.",
-      );
-    if (error instanceof SyntaxError)
-      throw new Error("The server returned an invalid response. Please retry.");
-    throw error;
-  } finally {
-    clearTimeout(timeout);
+    const failure = new Error(
+      error.response?.data?.message ||
+        (error.response?.status === 401
+          ? "Please sign in to continue."
+          : "Could not reach the healthcare server. Please retry."),
+    );
+    failure.status = error.response?.status;
+    if (failure.status === 403) csrf = undefined;
+    throw failure;
   }
 }
-export const api = {
-  health: () =>
-    hostedDemo
-      ? Promise.resolve({ status: "ok", database: "browser", workers: 5 })
-      : request("/api/health", null, (data) => data?.status === "ok"),
-  analyze: (patient) =>
-    hostedDemo
-      ? Promise.resolve(analyzeLocal(patient))
-      : request("/api/analyze", patient, validAnalysis),
-  run: (mode, patient) =>
-    hostedDemo
-      ? Promise.resolve(runLocalAnalysis(mode, patient))
-      : request(
-          `/api/analyze/${mode}`,
-          patient,
-          mode === "compare"
-            ? (data) =>
-                validRun(data?.sequential) &&
-                validRun(data?.parallel) &&
-                Number.isFinite(data.speedup) &&
-                Number.isFinite(data.improvement_percent)
-            : validRun,
-        ),
-  save: (patient) =>
-    hostedDemo
-      ? Promise.resolve(saveLocal(patient))
-      : request("/api/patients", patient, (data) => Number.isInteger(data?.id)),
-  history: () =>
-    hostedDemo
-      ? Promise.resolve(historyLocal())
-      : request(
-          "/api/patients",
-          null,
-          (data) =>
-            Array.isArray(data) &&
-            data.every(
-              (item) => Number.isInteger(item.id) && typeof item.name === "string",
-            ),
-        ),
-  record: (id) =>
-    hostedDemo
-      ? Promise.resolve(recordLocal(id)).then((record) => {
-          if (!record) throw new Error("Analysis record not found.");
-          return record;
-        })
-      : request(
-          `/api/patients/${id}`,
-          null,
-          (data) => Number.isInteger(data?.id) && validAnalysis(data.analysis),
-        ),
-};
+export async function login(email, password) {
+  await request(
+    "/auth/login",
+    "POST",
+    new URLSearchParams({ username: email.trim().toLowerCase(), password }),
+  );
+  csrf = undefined;
+  return request("/auth/me");
+}
+export async function logout() {
+  await request("/auth/logout", "POST");
+  csrf = undefined;
+}
