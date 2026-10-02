@@ -35,7 +35,9 @@ export async function request(path, method = "GET", data) {
           : "Could not reach the healthcare server. Please retry."),
     );
     failure.status = error.response?.status;
-    if (failure.status === 403) csrf = undefined;
+    if (failure.status === 403 || failure.status === 401) csrf = undefined;
+    if (failure.status === 401 && !path.startsWith("/auth/"))
+      window.dispatchEvent(new Event("session-expired"));
     throw failure;
   }
 }

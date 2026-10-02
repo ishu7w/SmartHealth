@@ -16,23 +16,34 @@ class HealthcareService {
   final Records records;
   final Alerts alerts;
   final HealthAnalyzer analyzer;
+  final Appointments appointments;
+  final Medications medications;
+  final CareProfiles profiles;
 
   HealthcareService(
     Users u,
     Patients p,
     Records r,
     Alerts a,
-    HealthAnalyzer h
+    HealthAnalyzer h,
+    Appointments appointments,
+    Medications medications,
+    CareProfiles profiles
   ) {
     users = u;
     patients = p;
     records = r;
     alerts = a;
     analyzer = h;
+    this.appointments = appointments;
+    this.medications = medications;
+    this.profiles = profiles;
   }
 
   Models.User user(Authentication auth) {
-    var u = users.findByEmail(auth.getName()).orElseThrow();
+    var u = (Models.User) org.hibernate.Hibernate.unproxy(
+      users.findByEmail(auth.getName()).orElseThrow()
+    );
     if (!u.enabled) throw new ResponseStatusException(
       HttpStatus.FORBIDDEN,
       "Account disabled"
@@ -45,11 +56,13 @@ class HealthcareService {
   }
 
   Models.Patient access(Long id, Models.User u) {
-    var p = patients
-      .findById(id)
-      .orElseThrow(() ->
-        new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found")
-      );
+    var p = (Models.Patient) org.hibernate.Hibernate.unproxy(
+      patients
+        .findById(id)
+        .orElseThrow(() ->
+          new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found")
+        )
+    );
     if (
       !staff(u) && !Objects.equals(p.userId, u.id)
     ) throw new ResponseStatusException(
@@ -131,6 +144,9 @@ class HealthcareService {
       HttpStatus.FORBIDDEN
     );
     var p = access(id, u);
+    appointments.deleteByPatientId(id);
+    medications.deleteByPatientId(id);
+    profiles.deleteByPatientId(id);
     alerts.deleteByPatientId(id);
     records.deleteByPatientId(id);
     patients.delete(p);

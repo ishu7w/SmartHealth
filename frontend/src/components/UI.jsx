@@ -5,7 +5,9 @@ export function StatusBadge({ status = "Normal" }) {
     ? "critical"
     : ["Warning", "Needs Attention", "Attention Required"].includes(status)
       ? "warning"
-      : ["Waiting", "Paused", "No readings"].includes(status)
+      : ["Waiting", "Paused", "No readings", "Requested", "Cancelled"].includes(
+            status,
+          )
         ? "neutral"
         : "normal";
   return (

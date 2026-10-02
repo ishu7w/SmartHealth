@@ -17,6 +17,8 @@ class SpaController {
     "/alerts",
     "/doctors",
     "/about",
+    "/care",
+    "/appointments",
   })
   String index() {
     return "forward:/index.html";

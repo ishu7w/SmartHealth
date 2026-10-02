@@ -8,7 +8,7 @@
 
 ## Abstract
 
-This project demonstrates a healthcare data workflow and compares sequential and parallel processing of independent patient records. A React interface connects to a Java Spring Boot application with persistent MySQL records. Patients submit vital signs; staff inspect histories and respond to rule-based alerts. The computing laboratory generates seeded synthetic datasets and measures actual Java execution time using a sequential loop and an ExecutorService thread pool. Results are displayed with timings, speedup, task schedules, and performance charts.
+This project demonstrates a healthcare data workflow and compares sequential and parallel processing of independent patient records. A React interface connects to a Java Spring Boot application with persistent embedded H2 records. Patients submit vital signs; staff inspect histories and respond to rule-based alerts. Care records, medication lists, appointment requests, and portable summaries add practical patient-portal workflows. The computing laboratory generates seeded synthetic datasets and measures actual Java execution time using a sequential loop and an ExecutorService thread pool. Results are displayed with timings, speedup, task schedules, and performance charts.
 
 ## Problem and objectives
 
@@ -73,7 +73,7 @@ Record observations from the application's own benchmark history. No universal t
 | 8 Alerts | Alerts page, staff acknowledgement/resolution |
 | 9 Dashboard | Live statistics, risk distribution, recent readings/alerts, processing curves |
 | 10 Datasets | Seeded generator for all five supported sizes |
-| 11–12 Stack/database | React/Axios/Recharts, Spring Boot/JPA/Security, MySQL schema |
+| 11–12 Stack/database | React/Axios/Recharts, Spring Boot/JPA/Security, relational H2 schema (updated user preference: no MySQL requirement) |
 | 13 REST API | All requested patient/record/process/alert/dashboard endpoints |
 | 14 Java implementation | Fixed ExecutorService, Callable/Future, cleanup, equality checks |
 | 15 Architecture | About page and architecture documentation; the supplied section is truncated |

@@ -11,6 +11,15 @@ import org.springframework.web.server.ResponseStatusException;
 @RestControllerAdvice
 class Errors {
 
+  @ExceptionHandler(
+    org.springframework.dao.OptimisticLockingFailureException.class
+  )
+  ResponseEntity<?> stale() {
+    return ResponseEntity.status(409).body(
+      Map.of("message", "This record changed. Refresh and try again.")
+    );
+  }
+
   private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(
     Errors.class
   );

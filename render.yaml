@@ -1,0 +1,27 @@
+# Optional deployment blueprint. This requires a paid service and persistent disk.
+# Do not activate until the hosting owner accepts the displayed charges.
+services:
+  - type: web
+    name: smarthealth
+    runtime: docker
+    plan: starter
+    numInstances: 1
+    healthCheckPath: /api/health
+    autoDeployTrigger: off
+    disk:
+      name: health-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: hosted
+      - key: DATA_DIR
+        value: /app/data
+      - key: DATABASE_PASSWORD
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: JAVA_TOOL_OPTIONS
+        value: -XX:MaxRAMPercentage=65

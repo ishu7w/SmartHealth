@@ -243,6 +243,9 @@ export default function Patients() {
                     )}
                   </div>
                   <div className="row-actions">
+                    <Link className="text-button" to={`/care?patient=${p.id}`}>
+                      Care record
+                    </Link>
                     <button
                       className="text-button"
                       onClick={() => {

@@ -18,10 +18,13 @@ The application combines patient accounts, persistent health records, threshold 
 | Measurement | Wall time, process CPU time, active tasks, thread schedule, speedup, time saved, result checksum verification |
 | Charts | Latest risk distribution, recent records/alerts, execution time vs dataset size, speedup vs size, mode comparison |
 | Access control | BCrypt passwords, server sessions, CSRF protection, role checks, patient ownership checks, immediate disabled-account revocation on next request |
+| Care record | Allergies, history, visit questions, medication list, trends, printable summary, CSV export |
+| Appointments | Patient requests, assigned-doctor/admin confirmation, cancellation/completion, overlap checks, calendar export |
+| Demo setup | Admin adds labelled synthetic profiles; helper script measures all five dataset sizes |
 
-The default database is **MySQL**. An optional H2 profile allows local development without a database installation. The previous Python implementation is retained only in `legacy/` and is not used by the rebuilt application. The browser-only fallback and illustrative benchmark numbers have been removed.
+The default database is **embedded H2 on disk**. **MySQL is not required.** The previous Python implementation is retained only in `legacy/` and is not used by the rebuilt application. The browser-only fallback and illustrative benchmark numbers have been removed. Read [Patient portal research](docs/REAL_WORLD_FEATURES.md), [Deployment without MySQL](docs/DEPLOYMENT.md), and the [classroom demo guide](docs/DEMO_GUIDE.md).
 
-## Quick start with MySQL and Docker
+## Quick start with Docker
 
 Requires Docker with Compose.
 
@@ -31,7 +34,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Open **http://localhost:8080**. The Docker image serves the React application and Java API together, so session cookies and CSRF tokens share one origin. MySQL data is retained in the `mysql-data` volume. No default administrator password is embedded in the app.
+Open **http://localhost:8080**. The Docker image serves the React application and Java API together, so session cookies and CSRF tokens share one origin. Embedded database files are retained in the `health-data` volume. No default administrator password is embedded in the app.
 
 `ADMIN_EMAIL` and `ADMIN_PASSWORD` create an administrator on the first startup for that email. Use a password of 12–72 characters. Later changes to those variables do not reset an existing account. Sign in as administrator to create doctor accounts; patients self-register.
 
@@ -39,15 +42,14 @@ Open **http://localhost:8080**. The Docker image serves the React application an
 
 ## Local development
 
-Requirements: **Java 21**, **Maven 3.9+**, **Node.js 22**, and MySQL 8.4+ (or the optional H2 demo profile). Set `JAVA_HOME` to a Java 21 installation if another Java version is the system default.
+Requirements: **Java 21**, **Maven 3.9+**, and **Node.js 22**. No database installation is needed. Set `JAVA_HOME` to a Java 21 installation if another Java version is the system default.
 
-### Backend with MySQL
+### Backend with embedded storage
 
-Create an empty database and a dedicated user with access to it. Export the connection and bootstrap settings in your shell:
+Export the data directory and bootstrap settings in your shell:
 
 ```sh
-export DATABASE_URL='jdbc:mysql://localhost:3306/smarthealth'
-export DATABASE_USER='smarthealth'
+export DATA_DIR="$PWD/local-health-data"
 export DATABASE_PASSWORD='your-database-password'
 export ADMIN_EMAIL='your-admin-email@example.com'
 export ADMIN_PASSWORD='your-admin-password-at-least-12-characters'
@@ -56,15 +58,15 @@ mvn -f backend/pom.xml spring-boot:run
 
 The backend listens on port **8080**. JPA creates/updates the academic schema. For deployment to a maintained production system, replace automatic schema updates with reviewed database migrations.
 
-### Optional offline database
+### Existing demo profile compatibility
 
-For a classroom demo without MySQL, set the admin variables above, then run:
+The previous explicit `demo` profile remains available for existing local demo files:
 
 ```sh
 mvn -f backend/pom.xml spring-boot:run -Dspring-boot.run.profiles=demo
 ```
 
-This stores H2 data under `backend/data/` when started using the command above. It is a separate database from MySQL. The active database profile is explicit; the application never silently switches storage when an API call fails.
+This uses `backend/data/` and a blank local database password, for compatibility with earlier local demos. For new work use the default configuration and `DATA_DIR` above. The application never silently switches storage when an API call fails. Hosted deployments must use the documented persistent disk and protected database settings.
 
 ### Frontend
 
@@ -86,7 +88,7 @@ java -jar backend/target/smarthealth-2.0.0.jar
 
 The same database/admin environment variables apply. The combined JAR serves the UI at port 8080 and supports direct navigation to every application page.
 
-The historical `vercel.json` still builds the static frontend. **A static Vercel deployment alone cannot run this Java/MySQL system.** Use the combined container/JAR on a Java-capable host, or configure a same-origin reverse proxy to that backend before using a separately hosted frontend. A missing backend is shown as a connection error, never replaced with fake results. This rebuild does not automatically redeploy an existing public site.
+The historical `vercel.json` still builds the static frontend. **A static Vercel deployment alone cannot run this Java application with durable storage.** Use the combined container/JAR on a Java-capable host with a persistent disk. A missing backend is shown as a connection error, never replaced with fake results. See the optional Render blueprint and [deployment instructions](docs/DEPLOYMENT.md).
 
 ## Classroom walkthrough
 
@@ -139,9 +141,9 @@ npx playwright install chromium
 E2E_ADMIN_EMAIL='admin@example.test' E2E_ADMIN_PASSWORD='local-test-password-123' npm run test:e2e
 ```
 
-The end-to-end test uses a dedicated test/demo database and creates synthetic patient/doctor accounts. It covers registration, profiles, readings, critical alerts, monitoring, role access, a real benchmark, and pages at 375/768/1440px. Use `PLAYWRIGHT_CHANNEL=chrome` to test with installed Chrome, and `APP_URL=http://localhost:8080` to test the combined JAR.
+The end-to-end test uses a dedicated test/demo database and creates synthetic patient/doctor accounts. It covers registration, profiles, readings, critical alerts, monitoring, role access, care records, medication lists, exports, appointments, a real benchmark, and pages at 375/768/1440px. Use `PLAYWRIGHT_CHANNEL=chrome` to test with installed Chrome, and `APP_URL=http://localhost:8080` to test the combined JAR. CI also restarts the application and verifies that saved information survives.
 
-To run the backend tests against a **disposable MySQL database**, set `TEST_DATABASE_URL`, `TEST_DATABASE_USER`, and `TEST_DATABASE_PASSWORD`. **The test profile creates and drops tables, so never point it at your application database.** CI runs the same suite on MySQL and then exercises the browser flow.
+The test profile creates and drops tables in a separate in-memory database. Never point `TEST_DATABASE_URL` at your application database. The compatibility database driver remains available for existing installations, but the default application, Docker Compose, hosted blueprint, and CI do not require MySQL.
 
 ## Project structure
 
@@ -150,7 +152,7 @@ backend/                  Java 21 / Spring Boot application and integration test
 frontend/                 Existing React UI, new authenticated pages and browser tests
 docs/                     Architecture, API reference, requirements and academic report
 scripts/build.sh          Build the React UI into an executable Java application
-Dockerfile, compose.yaml  Combined application plus persistent MySQL
+Dockerfile, compose.yaml  Combined application with persistent embedded storage
 legacy/                   Archived Python backend and former UI verification scripts
 ```
 

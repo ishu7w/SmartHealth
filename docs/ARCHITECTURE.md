@@ -16,7 +16,7 @@ flowchart TD
     Seq --> Compare[Timing + checksum equality]
     Futures --> Compare
     Compare --> JPA
-    JPA --> DB[(MySQL)]
+    JPA --> DB[(Embedded H2 on persistent disk)]
 ```
 
 ## Data model
@@ -86,6 +86,7 @@ erDiagram
 ```
 
 Every table also has a UTC creation timestamp. Doctors are users with role `DOCTOR`; a redundant separate doctor table is unnecessary because no additional doctor-specific fields were requested. Staff-created patient profiles have no login owner; self-registered patients create their own linked profile. A unique user reference prevents a patient account from creating multiple profiles.
+The care extension adds `care_profiles` (allergies, conditions, notes, updated-by), `medications` (instructions, source, status), and `appointments` (patient, doctor, requested time, lifecycle, version). All reference the patient through database foreign keys. Appointment confirmations lock the doctor and patient, reject overlapping confirmed 30-minute visits, and use version checks for stale updates. Embedded H2 is now the default and requires only a persistent directory and a single application instance.
 
 Patient and health-record references are database foreign keys. Patient deletion removes dependent records and alerts in one transaction. Record creation and its alerts are also one transaction. Records and alerts are indexed for patient history; history endpoints return the latest 100 entries. Dashboard active-alert counts cover all records, not only the recent history window.
 

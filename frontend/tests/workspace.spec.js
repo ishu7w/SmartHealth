@@ -59,11 +59,47 @@ test("patient, doctor, and administrator workflows remain usable across screen s
   await page.getByRole("button", { name: "Start simulation" }).click();
   await expect(page.locator("tbody tr")).toHaveCount(1);
   await page.getByRole("button", { name: "Pause simulation" }).click();
+  await page.goto("/care");
+  await page.getByRole("button", { name: "Edit care notes" }).click();
+  await page
+    .getByLabel("Allergies and reactions", { exact: true })
+    .fill("Synthetic latex reaction");
+  await page
+    .getByLabel("Conditions and health history", { exact: true })
+    .fill("Synthetic demonstration");
+  await page
+    .getByLabel("Care notes and questions", { exact: true })
+    .fill("Ask about recent readings");
+  await page.getByRole("button", { name: "Save care notes" }).click();
+  await expect(
+    page.getByText("Synthetic latex reaction", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByText("Add a medication to your list", { exact: true })
+    .click();
+  await page
+    .getByLabel("Medication name", { exact: true })
+    .fill("Demo medication");
+  await page
+    .getByLabel("Dose as instructed", { exact: true })
+    .fill("Example instructions");
+  await page
+    .getByLabel("Schedule as instructed", { exact: true })
+    .fill("Morning");
+  await page.getByRole("button", { name: "Save medication" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Demo medication" }),
+  ).toBeVisible();
+  const csvPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download readings CSV" }).click();
+  const csv = await csvPromise;
+  expect(csv.suggestedFilename()).toMatch(/readings.csv$/);
   await page.goto("/parallel");
   await expect(
     page.getByRole("heading", { name: "Staff workspace." }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await expect(page).toHaveURL(/\/account$/);
   await page
     .getByLabel("Email address")
     .fill(process.env.E2E_ADMIN_EMAIL || "admin@example.test");
@@ -74,17 +110,54 @@ test("patient, doctor, and administrator workflows remain usable across screen s
   await page.getByRole("link", { name: "Doctors", exact: true }).click();
   await page
     .getByLabel("Full name", { exact: true })
-    .fill("Browser Test Doctor");
+    .fill(`Browser Test Doctor ${suffix}`);
   await page.getByLabel("Email address").fill(doctorEmail);
   await page.getByLabel("Initial password").fill(password);
   await page.getByRole("button", { name: "Create doctor" }).click();
   await expect(
     page.locator(".directory-row").filter({ hasText: doctorEmail }),
   ).toBeVisible();
+  await page.goto("/appointments");
+  const nextDay = new Date(Date.now() + 86400000);
+  nextDay.setHours(10, 0, 0, 0);
+  const localDate = new Date(
+    nextDay.getTime() - nextDay.getTimezoneOffset() * 60000,
+  )
+    .toISOString()
+    .slice(0, 16);
+  await page
+    .getByLabel("Doctor", { exact: true })
+    .selectOption({ label: `Browser Test Doctor ${suffix}` });
+  await page.getByLabel(/Preferred date and time/).fill(localDate);
+  await page
+    .getByLabel("Reason for visit", { exact: true })
+    .fill(`Follow-up ${suffix}`);
+  await page
+    .getByRole("button", { name: "Request appointment", exact: true })
+    .click();
+  await expect(
+    page.getByText(`Follow-up ${suffix}`, { exact: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await expect(page).toHaveURL(/\/account$/);
   await page.getByLabel("Email address").fill(doctorEmail);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(
+    page.getByRole("navigation", { name: "Workspace navigation" }),
+  ).toBeVisible();
+  await page.goto("/appointments");
+  const visit = page
+    .locator(".appointment-card")
+    .filter({ hasText: `Follow-up ${suffix}` });
+  await visit
+    .getByLabel(/Staff notes for appointment/)
+    .fill("Demo call instructions");
+  await visit.getByRole("button", { name: "Confirm request" }).click();
+  await expect(visit.getByText("Confirmed", { exact: true })).toBeVisible();
+  const calendarPromise = page.waitForEvent("download");
+  await visit.getByRole("button", { name: "Add to calendar" }).click();
+  expect((await calendarPromise).suggestedFilename()).toMatch(/\.ics$/);
   await page.getByRole("link", { name: "Alerts", exact: true }).first().click();
   await page
     .getByRole("button", { name: "Acknowledge", exact: true })
@@ -123,6 +196,8 @@ test("patient, doctor, and administrator workflows remain usable across screen s
       "/alerts",
       "/parallel",
       "/about",
+      "/care",
+      "/appointments",
     ]) {
       await page.goto(route);
       await expect(page.locator("h1")).toBeVisible();
@@ -147,6 +222,23 @@ test("patient, doctor, and administrator workflows remain usable across screen s
     path: "test-results/patients-mobile.png",
     fullPage: true,
   });
+  await page.goto("/care");
+  await expect(
+    page.getByRole("heading", { name: "Medication list" }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: "test-results/care-mobile.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/appointments");
+  await expect(
+    page.getByRole("heading", { name: "Your appointment timeline" }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: "test-results/appointments-desktop.png",
+    fullPage: true,
+  });
   expect(errors).toEqual([]);
   await context.close();
 });
@@ -160,7 +252,9 @@ test("existing motion and navigation work without reduced-motion mode", async ({
   await expect(
     page.getByRole("heading", { name: "Healthcare meets computing." }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Pause site motion", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Pause site motion", exact: true })
+    .click();
   await expect(page.locator("html")).toHaveAttribute("data-motion", "reduced");
   await page.setViewportSize({ width: 375, height: 850 });
   await page

@@ -10,6 +10,7 @@ import {
 import { StatusBadge, Disclaimer } from "../components/UI";
 import SignalDiagram from "../components/SignalDiagram";
 import PerformanceCharts from "../components/PerformanceCharts";
+import DemoSetup from "../components/DemoSetup";
 
 export default function Dashboard() {
   const { user } = useSession();
@@ -186,6 +187,15 @@ export default function Dashboard() {
             </ResourceState>
           </section>
         </>
+      )}
+      {user.role === "ADMIN" && (
+        <DemoSetup
+          onCreated={() => {
+            stats.reload();
+            readings.reload();
+            alerts.reload();
+          }}
+        />
       )}
       <Disclaimer />
     </div>

@@ -17,6 +17,7 @@ FROM eclipse-temurin:21-jre-alpine
 RUN addgroup -S smarthealth && adduser -S smarthealth -G smarthealth
 WORKDIR /app
 COPY --from=backend --chown=smarthealth:smarthealth /app/target/smarthealth-2.0.0.jar app.jar
+RUN mkdir -p /app/data && chown smarthealth:smarthealth /app/data
 USER smarthealth
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
