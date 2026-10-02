@@ -20,7 +20,7 @@ public final class Models {
     public Instant createdAt = Instant.now();
   }
 
-  @Entity
+  @Entity(name = "Account")
   @Table(name = "users")
   public static class User extends Row {
 
@@ -36,7 +36,7 @@ public final class Models {
     public boolean enabled = true;
   }
 
-  @Entity
+  @Entity(name = "PatientProfile")
   @Table(
     name = "patients",
     indexes = @Index(columnList = "userId", unique = true)

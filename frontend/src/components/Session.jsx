@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Link, Navigate, Outlet } from "react-router-dom";
 import { request, logout } from "../services/api";
 import { ErrorNotice, Loading } from "./UI";
@@ -6,26 +6,55 @@ import { ErrorNotice, Loading } from "./UI";
 const Session = createContext(null);
 export const useSession = () => useContext(Session);
 export function SessionProvider({ children }) {
+  const revision = useRef(0);
   const [user, setUser] = useState(null),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   const refresh = async () => {
+    const attempt = ++revision.current;
     setLoading(true);
     setError("");
     try {
-      setUser(await request("/auth/me"));
+      const account = await request("/auth/me");
+      if (attempt === revision.current) setUser(account);
     } catch (e) {
-      setUser(null);
-      if (e.status !== 401) setError(e.message);
+      if (attempt === revision.current) {
+        setUser(null);
+        if (e.status !== 401) setError(e.message);
+      }
     } finally {
-      setLoading(false);
+      if (attempt === revision.current) setLoading(false);
     }
   };
   useEffect(() => {
     refresh();
+    const expired = () => {
+      revision.current++;
+      setUser(null);
+      setError("");
+      setLoading(false);
+    };
+    window.addEventListener("session-expired", expired);
+    return () => {
+      revision.current++;
+      window.removeEventListener("session-expired", expired);
+    };
   }, []);
   return (
-    <Session.Provider value={{ user, setUser, loading, error, refresh }}>
+    <Session.Provider
+      value={{
+        user,
+        setUser: (value) => {
+          revision.current++;
+          setUser(value);
+          setError("");
+          setLoading(false);
+        },
+        loading,
+        error,
+        refresh,
+      }}
+    >
       {children}
     </Session.Provider>
   );
@@ -60,6 +89,7 @@ export function RequireAccount({ staff = false, admin = false }) {
 export function AccountBar() {
   const { user, setUser } = useSession();
   const [error, setError] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
   if (!user) return null;
   return (
     <div className="account-section">
@@ -73,19 +103,25 @@ export function AccountBar() {
             {user.role === "PATIENT" ? "My profile" : "Patients"}
           </Link>
           <Link to="/alerts">Alerts</Link>
+          <Link to="/care">Care record</Link>
+          <Link to="/appointments">Appointments</Link>
           {user.role === "ADMIN" && <Link to="/doctors">Doctors</Link>}
           <button
             className="text-button"
+            disabled={signingOut}
             onClick={async () => {
+              setSigningOut(true);
               try {
                 await logout();
                 setUser(null);
               } catch (e) {
                 setError(e.message);
+              } finally {
+                setSigningOut(false);
               }
             }}
           >
-            Sign out
+            {signingOut ? "Signing out…" : "Sign out"}
           </button>
         </nav>
       </div>

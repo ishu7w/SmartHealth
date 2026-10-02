@@ -1,19 +1,21 @@
-# Rebuild verification — 21 September 2026
+# Verification — 2 October 2026
 
-The rebuilt project was checked locally using Java 21 and Chrome. Test records and accounts were synthetic and are not included in Git.
+Checks use Java 21, Chrome, and synthetic records. The existing visual foundation and motion remain intact.
 
 | Check | Result |
 |---|---|
-| Spring integration suite, H2 | 11 tests passed, no failures or errors |
-| Same integration suite, isolated MySQL 9.6 | 11 tests passed, no failures or errors |
-| All dataset sizes, 100 through 10,000 | Sequential and parallel checksums matched; all records processed; active workers returned to zero |
-| Combined React + Spring Boot executable JAR | Built and started successfully |
-| Packaged application browser workflow | Passed: patient registration/profile/reading/alerts, staff management, monitoring, actual comparison |
-| Responsive pages | Seven core pages checked at 375, 768, and 1440px; no document-level horizontal overflow |
-| Motion and mobile navigation | Passed: default animation mode, pause control, mobile menu, guarded-route navigation |
-| Browser JavaScript errors | None in the successful walkthroughs |
-| Existing visual foundation | Original public artwork, main stylesheet, ambient animation, Lenis implementation, and motion utilities preserved |
+| Spring integration suite | 15 tests passed, including ownership, care records, medications, appointment transitions/conflicts, and demo setup |
+| Packaged React + Spring Boot application | Production build and executable JAR started successfully |
+| Browser workflows | Two tests passed: patient, doctor, administrator, care notes, medication entries, CSV, calendar export, monitoring, alerts, and actual processing |
+| Responsive layout | Nine main pages checked at 375, 768, and 1440 pixels without document-level horizontal overflow |
+| Motion and navigation | Pause control, mobile menu, and guarded navigation passed |
+| Browser JavaScript errors | None during successful walkthroughs |
+| CSV safety | Formula neutralization and quotation escaping passed |
+| Restart persistence | Saved patients, care summaries, medications, appointments, readings, alerts, and benchmarks matched after the Java process restarted; administrator signed in again |
+| Real benchmark preparation | All five dataset sizes completed with matching sequential/parallel results; measurements saved locally in ignored demo-output |
 
-The browser suite contains two tests and was run against the combined app on port 8080; the main workflow was also checked through the development proxy on port 5173. Performance results are generated and persisted at runtime, not copied into fixtures or presented as universal speedup claims.
+The default persistent database is embedded H2. No MySQL server is required. GitHub Actions repeats the build, integration tests, CSV test, browser workflows, and restart check.
 
-Docker configuration is provided, but the local Docker daemon was unavailable, so a local container build was not claimed. The Java/MySQL application, frontend production build, combined JAR, and real browser workflows were verified directly. GitHub Actions is configured to repeat integration tests on MySQL 8.4 and run the packaged application through the browser suite.
+The local Docker daemon was unavailable, so a local container build is not claimed. Deployment configuration is prepared, but public hosting has not been activated: the hosting provider/account still needs to be identified. The embedded database requires a persistent disk and a single application instance.
+
+Benchmark timings vary with hardware, warm-up, and load. The demo generates actual results instead of promising a fixed speedup.

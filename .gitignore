@@ -18,3 +18,5 @@ data/
 .vercel/
 test-results/
 playwright-report/
+demo-output/
+local-health-data/

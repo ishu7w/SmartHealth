@@ -62,6 +62,21 @@ Benchmark:
 
 Supported counts: 100, 500, 1000, 5000, 10000. Threads: 1–32. The response has `summary`, `sequential`, `parallel`, `availableProcessors`, and `workload`. A mode that was not run is null. Each run provides `totalMs`, `cpuMs`, `checksum`, `processed`, and up to 100 task intervals. Checksums are strings for lossless JavaScript transport. The summary persists the actual measurements; speedup/timeSaved are null for single-mode runs.
 
+## Care and appointments
+
+| Method | Path | Behavior |
+|---|---|---|
+| GET | `/patients/{id}/summary` | Owner/staff: profile, care notes, medications, latest 100 readings and appointments |
+| PUT | `/patients/{id}/care-profile` | Owner/staff: `{allergies, conditions, careNotes}` with length limits |
+| POST | `/patients/{id}/medications` | Owner/staff: `{name, dose, schedule, notes}`; source assigned by server |
+| PUT | `/medications/{id}/status` | Owner/staff: `{status: "Active" or "Stopped"}` |
+| GET | `/care/doctors` | Authenticated: active doctor IDs and names only |
+| GET, POST | `/appointments` | Visible latest 100 appointments; request `{patientId, doctorId, scheduledAt, visitType, reason}` |
+| PUT | `/appointments/{id}` | `{status, staffNotes, version}`; assigned doctor/admin transitions, owner cancellation |
+| POST | `/admin/demo` | Admin-only synthetic demo seed; skips existing demo names |
+
+Appointment timestamps are ISO-8601 instants. Future requests must fall within one year. Visit types: `In person`, `Phone`, `Video`. States: `Requested`, `Confirmed`, `Cancelled`, `Completed`. Confirmations prevent overlapping 30-minute appointments for doctor or patient. Completion requires a confirmed visit whose start time has passed. Stale versions return 409; closed visits cannot be changed. Patients cannot alter staff notes.
+
 ## Error behavior
 
 - 400: invalid body, validation failure, unsupported dataset size, inconsistent BP.

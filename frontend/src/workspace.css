@@ -52,7 +52,8 @@
   color: #e5e5e5;
 }
 .field input,
-.field select {
+.field select,
+.field textarea {
   width: 100%;
   min-width: 0;
   min-height: 48px;
@@ -63,6 +64,87 @@
   background: #161616e0;
   font: inherit;
   font-size: 16px;
+}
+.field textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+.preserve-lines {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.appointment-card {
+  padding: 26px 0;
+  border-bottom: 1px solid #ffffff25;
+}
+.appointment-card p,
+.appointment-card .row-actions,
+.appointment-card .field {
+  margin: 16px 0;
+}
+.care-page details {
+  padding-top: 20px;
+}
+.care-page summary {
+  cursor: pointer;
+  min-height: 44px;
+}
+.summary-header h2 {
+  margin-top: 14px;
+}
+@media print {
+  .no-print,
+  .app-chrome,
+  .account-section,
+  .ambient-scene,
+  .motion-toggle,
+  footer,
+  .skip-link,
+  .care-page > .page-heading {
+    display: none !important;
+  }
+  html,
+  body,
+  #root,
+  main {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .care-page {
+    display: block !important;
+  }
+  .care-page .panel {
+    color: black !important;
+    background: white !important;
+    border: 1px solid #bbb;
+    box-shadow: none;
+    backdrop-filter: none;
+    margin: 16px 0;
+    padding: 16px;
+  }
+  .care-page * {
+    color: black !important;
+    text-shadow: none !important;
+  }
+  .care-page .table-scroll {
+    overflow: visible;
+  }
+  .care-page table {
+    font-size: 8px;
+  }
+  .care-page th,
+  .care-page td {
+    padding: 5px;
+    white-space: normal;
+  }
+  .care-page .directory-row {
+    break-inside: avoid;
+  }
+  .care-page .disclaimer {
+    margin-top: 16px;
+  }
 }
 .field input:focus,
 .field select:focus {

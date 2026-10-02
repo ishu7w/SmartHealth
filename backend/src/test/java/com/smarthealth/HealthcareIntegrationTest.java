@@ -47,10 +47,22 @@ class HealthcareIntegrationTest {
   @Autowired
   ParallelHealthProcessor processor;
 
+  @Autowired
+  CareProfiles careProfiles;
+
+  @Autowired
+  Medications medications;
+
+  @Autowired
+  Appointments appointments;
+
   long aliceId, bobId;
 
   @BeforeEach
   void setup() {
+    appointments.deleteAll();
+    medications.deleteAll();
+    careProfiles.deleteAll();
     alerts.deleteAll();
     records.deleteAll();
     patients.deleteAll();
@@ -367,6 +379,254 @@ class HealthcareIntegrationTest {
           )
       );
     }
+  }
+
+  @Test
+  @WithMockUser(username = "alice@example.test", roles = "PATIENT")
+  void careRecordAndMedicationArePrivateAndPersisted() throws Exception {
+    mvc
+      .perform(
+        put("/api/patients/" + aliceId + "/care-profile")
+          .with(csrf())
+          .contentType("application/json")
+          .content(
+            "{\"allergies\":\"Synthetic latex reaction\",\"conditions\":\"Demo history\",\"careNotes\":\"Questions for next visit\"}"
+          )
+      )
+      .andExpect(status().isOk());
+    mvc
+      .perform(
+        post("/api/patients/" + aliceId + "/medications")
+          .with(csrf())
+          .contentType("application/json")
+          .content(
+            "{\"name\":\"Demo medicine\",\"dose\":\"As instructed\",\"schedule\":\"Morning\",\"notes\":\"Synthetic only\"}"
+          )
+      )
+      .andExpect(status().isCreated())
+      .andExpect(jsonPath("$.source").value("Patient entered"));
+    mvc
+      .perform(get("/api/patients/" + aliceId + "/summary"))
+      .andExpect(
+        jsonPath("$.profile.allergies").value("Synthetic latex reaction")
+      )
+      .andExpect(jsonPath("$.medications.length()").value(1));
+    mvc
+      .perform(get("/api/patients/" + bobId + "/summary"))
+      .andExpect(status().isForbidden());
+    mvc
+      .perform(
+        put("/api/patients/" + bobId + "/care-profile")
+          .with(csrf())
+          .contentType("application/json")
+          .content(
+            "{\"allergies\":\"\",\"conditions\":\"\",\"careNotes\":\"\"}"
+          )
+      )
+      .andExpect(status().isForbidden());
+    long id = medications.findAll().getFirst().id;
+    mvc
+      .perform(
+        put("/api/medications/" + id + "/status")
+          .with(csrf())
+          .contentType("application/json")
+          .content("{\"status\":\"Stopped\"}")
+      )
+      .andExpect(jsonPath("$.status").value("Stopped"));
+    mvc
+      .perform(
+        put("/api/medications/" + id + "/status")
+          .with(user("bob@example.test").roles("PATIENT"))
+          .with(csrf())
+          .contentType("application/json")
+          .content("{\"status\":\"Active\"}")
+      )
+      .andExpect(status().isForbidden());
+  }
+
+  private long requestVisit(long patientId, java.time.Instant time)
+    throws Exception {
+    long doctorId = users.findByEmail("doctor@example.test").orElseThrow().id;
+    String body = json.writeValueAsString(
+      new CareInputs.Appointment(
+        patientId,
+        doctorId,
+        time,
+        "Phone",
+        "Synthetic follow-up"
+      )
+    );
+    var response = mvc
+      .perform(
+        post("/api/appointments")
+          .with(csrf())
+          .contentType("application/json")
+          .content(body)
+      )
+      .andExpect(status().isCreated())
+      .andReturn();
+    return json
+      .readTree(response.getResponse().getContentAsString())
+      .get("id")
+      .asLong();
+  }
+
+  private String appointmentChange(String status, long version)
+    throws Exception {
+    return json.writeValueAsString(
+      new CareInputs.AppointmentUpdate(
+        status,
+        "Demo visit instructions",
+        version
+      )
+    );
+  }
+
+  @Test
+  @WithMockUser(username = "alice@example.test", roles = "PATIENT")
+  void patientCanRequestAndCancelButCannotConfirmOrReadOthers()
+    throws Exception {
+    var time = java.time.Instant.now().plusSeconds(86400);
+    long id = requestVisit(aliceId, time);
+    mvc
+      .perform(
+        put("/api/appointments/" + id)
+          .with(csrf())
+          .contentType("application/json")
+          .content(appointmentChange("Confirmed", 0))
+      )
+      .andExpect(status().isForbidden());
+    mvc
+      .perform(
+        get("/api/appointments").with(user("bob@example.test").roles("PATIENT"))
+      )
+      .andExpect(jsonPath("$.length()").value(0));
+    mvc
+      .perform(
+        put("/api/appointments/" + id)
+          .with(user("bob@example.test").roles("PATIENT"))
+          .with(csrf())
+          .contentType("application/json")
+          .content(appointmentChange("Cancelled", 0))
+      )
+      .andExpect(status().isForbidden());
+    mvc
+      .perform(
+        put("/api/appointments/" + id)
+          .with(csrf())
+          .contentType("application/json")
+          .content(appointmentChange("Cancelled", 0))
+      )
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.staffNotes").value(""));
+    mvc
+      .perform(
+        put("/api/appointments/" + id)
+          .with(csrf())
+          .contentType("application/json")
+          .content(appointmentChange("Cancelled", 1))
+      )
+      .andExpect(status().isConflict());
+    mvc
+      .perform(
+        post("/api/appointments")
+          .with(csrf())
+          .contentType("application/json")
+          .content(
+            json.writeValueAsString(
+              new CareInputs.Appointment(
+                aliceId,
+                users.findByEmail("doctor@example.test").orElseThrow().id,
+                java.time.Instant.now().minusSeconds(100),
+                "Phone",
+                "Past time"
+              )
+            )
+          )
+      )
+      .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithMockUser(username = "doctor@example.test", roles = "DOCTOR")
+  void doctorConfirmationPreventsOverlapAndStaleUpdates() throws Exception {
+    var time = java.time.Instant.now().plusSeconds(86400);
+    long first = requestVisit(aliceId, time),
+      second = requestVisit(bobId, time.plusSeconds(900));
+    mvc
+      .perform(
+        put("/api/appointments/" + first)
+          .with(csrf())
+          .contentType("application/json")
+          .content(appointmentChange("Confirmed", 0))
+      )
+      .andExpect(status().isOk());
+    mvc
+      .perform(
+        put("/api/appointments/" + second)
+          .with(csrf())
+          .contentType("application/json")
+          .content(appointmentChange("Confirmed", 0))
+      )
+      .andExpect(status().isConflict());
+    mvc
+      .perform(
+        put("/api/appointments/" + first)
+          .with(csrf())
+          .contentType("application/json")
+          .content(appointmentChange("Cancelled", 0))
+      )
+      .andExpect(status().isConflict());
+    mvc
+      .perform(
+        put("/api/appointments/" + first)
+          .with(csrf())
+          .contentType("application/json")
+          .content(appointmentChange("Completed", 1))
+      )
+      .andExpect(status().isConflict());
+    mvc
+      .perform(
+        put("/api/appointments/" + first)
+          .with(csrf())
+          .contentType("application/json")
+          .content(appointmentChange("Cancelled", 1))
+      )
+      .andExpect(status().isOk());
+    mvc
+      .perform(
+        put("/api/appointments/" + second)
+          .with(csrf())
+          .contentType("application/json")
+          .content(appointmentChange("Confirmed", 0))
+      )
+      .andExpect(status().isOk());
+  }
+
+  @Test
+  @WithMockUser(username = "admin@example.test", roles = "ADMIN")
+  void deletingPatientRemovesCareDataAndDemoSeedIsRepeatable()
+    throws Exception {
+    requestVisit(aliceId, java.time.Instant.now().plusSeconds(86400));
+    var medication = new CareModels.Medication();
+    medication.patientId = aliceId;
+    medication.name = "Demo";
+    medications.save(medication);
+    var profile = new CareModels.Profile();
+    profile.patientId = aliceId;
+    careProfiles.save(profile);
+    mvc
+      .perform(delete("/api/patients/" + aliceId).with(csrf()))
+      .andExpect(status().isNoContent());
+    assertEquals(0, appointments.count());
+    assertEquals(0, medications.count());
+    assertEquals(0, careProfiles.count());
+    mvc
+      .perform(post("/api/admin/demo").with(csrf()))
+      .andExpect(jsonPath("$.createdPatients").value(3));
+    mvc
+      .perform(post("/api/admin/demo").with(csrf()))
+      .andExpect(jsonPath("$.createdPatients").value(0));
   }
 
   @Test

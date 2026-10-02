@@ -11,6 +11,8 @@ import PatientAnalysis from "./pages/PatientAnalysis";
 import Monitoring from "./pages/Monitoring";
 import ParallelDemo from "./pages/ParallelDemo";
 import About from "./pages/About";
+import Care from "./pages/Care";
+import Appointments from "./pages/Appointments";
 import Account from "./pages/Account";
 import Patients from "./pages/Patients";
 import Alerts from "./pages/Alerts";
@@ -27,6 +29,8 @@ export default function App() {
       "/alerts": "Alerts",
       "/doctors": "Doctors",
       "/account": "Account",
+      "/care": "Care record",
+      "/appointments": "Appointments",
     }[pathname] ||
     "Page not found";
   useEffect(() => {
@@ -99,6 +103,8 @@ export default function App() {
             <Route path="/monitoring" element={<Monitoring />} />
             <Route path="/patients" element={<Patients />} />
             <Route path="/alerts" element={<Alerts />} />
+            <Route path="/care" element={<Care />} />
+            <Route path="/appointments" element={<Appointments />} />
           </Route>
           <Route element={<RequireAccount staff />}>
             <Route path="/parallel" element={<ParallelDemo />} />
