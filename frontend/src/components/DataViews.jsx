@@ -11,6 +11,7 @@ export function useResource(path) {
     let active = true;
     setLoading(true);
     setError("");
+    setData(null);
     if (!path) {
       setData(null);
       setLoading(false);

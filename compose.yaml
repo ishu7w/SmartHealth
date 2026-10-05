@@ -9,6 +9,7 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      PRACTICE_TOOLS: ${PRACTICE_TOOLS:-false}
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=65
     volumes:
       - health-data:/app/data

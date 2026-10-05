@@ -11,14 +11,18 @@ import { StatusBadge, Disclaimer } from "../components/UI";
 import SignalDiagram from "../components/SignalDiagram";
 import PerformanceCharts from "../components/PerformanceCharts";
 import DemoSetup from "../components/DemoSetup";
+import CareOverview from "../components/CareOverview";
 
 export default function Dashboard() {
   const { user } = useSession();
   const staff = user.role !== "PATIENT";
+  const config = useResource("/portal/config");
   const stats = useResource("/dashboard/statistics"),
     readings = useResource("/health-records"),
     alerts = useResource("/alerts"),
-    benchmarks = useResource(staff ? "/process/benchmarks" : null);
+    benchmarks = useResource(
+      staff && config.data?.practiceTools ? "/process/benchmarks" : null,
+    );
   const d = stats.data;
   return (
     <div className="page-stack dashboard-page">
@@ -37,6 +41,7 @@ export default function Dashboard() {
           Add Health Reading <ArrowUpRight size={17} />
         </Link>
       </section>
+      <CareOverview />
       <section className="overview-surface">
         <div className="overview-title">
           <div>
@@ -60,10 +65,20 @@ export default function Dashboard() {
             <>
               <div className="stats-grid">
                 {[
-                  ["Total patients", d.totalPatients],
-                  ["Normal patients", d.riskDistribution.Normal],
-                  ["High risk patients", d.riskDistribution["High Risk"]],
-                  ["Critical patients", d.riskDistribution.Critical],
+                  ...(staff && config.data?.practiceTools
+                    ? [
+                        ["Total patients", d.totalPatients],
+                        ["Normal patients", d.riskDistribution.Normal],
+                        ["High risk patients", d.riskDistribution["High Risk"]],
+                        ["Critical patients", d.riskDistribution.Critical],
+                      ]
+                    : [
+                        [
+                          "Recent entered readings",
+                          readings.data?.filter((r) => !r.simulated).length ||
+                            0,
+                        ],
+                      ]),
                   ["Active alerts", d.activeAlerts],
                   ...(staff
                     ? [
@@ -85,35 +100,37 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
-              <div className="overview-chart">
-                <h2>Patient risk distribution</h2>
-                <p>
-                  Latest reading per patient; profiles without readings are
-                  shown separately.
-                </p>
-                <div className="risk-distribution">
-                  {Object.entries(d.riskDistribution).map(([risk, count]) => (
-                    <div className="risk-row" key={risk}>
-                      <span>{risk}</span>
-                      <div className="risk-track">
-                        <i
-                          style={{
-                            width: `${d.totalPatients ? (count / d.totalPatients) * 100 : 0}%`,
-                          }}
-                        />
-                      </div>
-                      <strong>{count}</strong>
-                    </div>
-                  ))}
-                </div>
-                {staff && (
-                  <p className="muted">
-                    Processing totals and averages cover the latest{" "}
-                    {d.benchmarkSampleSize} saved runs. Comparisons process each
-                    dataset twice.
+              {staff && (
+                <div className="overview-chart">
+                  <h2>Patient risk distribution</h2>
+                  <p>
+                    Latest reading per patient; profiles without readings are
+                    shown separately.
                   </p>
-                )}
-              </div>
+                  <div className="risk-distribution">
+                    {Object.entries(d.riskDistribution).map(([risk, count]) => (
+                      <div className="risk-row" key={risk}>
+                        <span>{risk}</span>
+                        <div className="risk-track">
+                          <i
+                            style={{
+                              width: `${d.totalPatients ? (count / d.totalPatients) * 100 : 0}%`,
+                            }}
+                          />
+                        </div>
+                        <strong>{count}</strong>
+                      </div>
+                    ))}
+                  </div>
+                  {staff && (
+                    <p className="muted">
+                      Processing totals and averages cover the latest{" "}
+                      {d.benchmarkSampleSize} saved runs. Comparisons process
+                      each dataset twice.
+                    </p>
+                  )}
+                </div>
+              )}
             </>
           )}
         </ResourceState>
@@ -155,7 +172,7 @@ export default function Dashboard() {
           )}
         </ResourceState>
       </section>
-      {staff && (
+      {staff && config.data?.practiceTools && (
         <>
           <section className="compute-feature">
             <div className="compute-copy">
@@ -188,7 +205,7 @@ export default function Dashboard() {
           </section>
         </>
       )}
-      {user.role === "ADMIN" && (
+      {user.role === "ADMIN" && config.data?.practiceTools && (
         <DemoSetup
           onCreated={() => {
             stats.reload();

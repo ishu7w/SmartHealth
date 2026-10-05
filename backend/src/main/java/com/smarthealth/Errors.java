@@ -12,6 +12,25 @@ import org.springframework.web.server.ResponseStatusException;
 class Errors {
 
   @ExceptionHandler(
+    org.springframework.web.servlet.resource.NoResourceFoundException.class
+  )
+  ResponseEntity<?> missing() {
+    return ResponseEntity.status(404).body(
+      Map.of("message", "This feature or address is unavailable")
+    );
+  }
+
+  @ExceptionHandler({
+    org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
+    org.springframework.web.bind.MissingServletRequestParameterException.class,
+  })
+  ResponseEntity<?> parameter() {
+    return ResponseEntity.badRequest().body(
+      Map.of("message", "Invalid request parameter")
+    );
+  }
+
+  @ExceptionHandler(
     org.springframework.dao.OptimisticLockingFailureException.class
   )
   ResponseEntity<?> stale() {

@@ -405,3 +405,148 @@
     width: 100%;
   }
 }
+
+/* Patient communication follows the existing glass surfaces and type scale. */
+.portal-notice {
+  padding: 1rem 1.25rem;
+  border-left: 2px solid #8bddba;
+  color: #b9c8c3;
+  line-height: 1.65;
+}
+.inbox-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.85fr) minmax(0, 2fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+.conversation-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 1rem;
+  text-align: left;
+  background: transparent;
+  color: inherit;
+  border: 1px solid transparent;
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  border-radius: 0.65rem;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.conversation-row.selected {
+  background: rgba(139, 221, 186, 0.08);
+  border-color: rgba(139, 221, 186, 0.35);
+}
+.conversation-row span,
+.conversation-row small {
+  color: #b9c8c3;
+}
+.unread-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 0.6rem;
+  border-radius: 50%;
+  background: #8bddba;
+}
+.thread-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.message-bubble {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  margin-right: 1.25rem;
+}
+.message-bubble.own {
+  background: rgba(139, 221, 186, 0.07);
+  margin-left: 1.25rem;
+  margin-right: 0;
+}
+.message-bubble div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.message-bubble span {
+  color: #b9c8c3;
+  font-size: 0.85rem;
+}
+.message-bubble p,
+.preserve-lines {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.message-thread,
+.inbox-list {
+  min-width: 0;
+}
+.message-thread form,
+.page-stack form {
+  display: grid;
+  gap: 1rem;
+}
+.message-thread form .button,
+.page-stack form > .button {
+  justify-self: start;
+}
+.follow-up-row {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.follow-up-row > div {
+  min-width: 0;
+}
+.follow-up-row h3 {
+  overflow-wrap: anywhere;
+}
+.task-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+.care-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+.care-overview-grid > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .inbox-layout,
+  .care-overview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .follow-up-row {
+    flex-direction: column;
+  }
+  .task-actions {
+    flex-shrink: 1;
+  }
+  .inbox-list {
+    max-height: 22rem;
+    overflow-y: auto;
+  }
+}

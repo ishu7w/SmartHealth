@@ -20,7 +20,9 @@ export default function PatientAnalysis() {
   const [query] = useSearchParams();
   const patients = useResource("/patients");
   const [patientId, setPatientId] = useState(query.get("patient") || ""),
-    [vitals, setVitals] = useState(normalVitals),
+    [vitals, setVitals] = useState(() =>
+      Object.fromEntries(Object.keys(normalVitals).map((key) => [key, ""])),
+    ),
     [result, setResult] = useState(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);

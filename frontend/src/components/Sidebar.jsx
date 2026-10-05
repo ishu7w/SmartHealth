@@ -9,21 +9,24 @@ import {
   BookOpen,
   Menu,
   X,
+  CalendarDays,
+  FileHeart,
+  MessageSquare,
 } from "lucide-react";
 import { gsap, reduceMotion } from "../lib/motion";
 export const navigation = [
   ["/", "Dashboard", LayoutDashboard],
   ["/analysis", "Patient Analysis", ClipboardPlus],
-  ["/monitoring", "Health Monitoring", Activity],
-  ["/parallel", "Parallel Processing", Cpu],
-  ["/about", "About Project", BookOpen],
+  ["/appointments", "Appointments", CalendarDays],
+  ["/care", "Care record", FileHeart],
+  ["/messages", "Messages", MessageSquare],
 ];
 const shortNames = [
   "Overview",
   "Analysis",
-  "Monitoring",
-  "Processing",
-  "About",
+  "Appointments",
+  "Records",
+  "Messages",
 ];
 export default function Sidebar({ open, close, toggle }) {
   const { pathname } = useLocation();
@@ -100,7 +103,7 @@ export default function Sidebar({ open, close, toggle }) {
             </NavLink>
           ))}
         </nav>
-        <span className="chrome-edition">Academic edition</span>
+        <span className="chrome-edition">Your care, connected</span>
         <button
           className="menu-button icon-button"
           aria-label={open ? "Close navigation" : "Open navigation"}

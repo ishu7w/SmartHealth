@@ -87,3 +87,21 @@ Appointment timestamps are ISO-8601 instants. Future requests must fall within o
 - 500: unexpected server failure; no fabricated fallback result.
 
 Application errors include a readable `message`. Framework authorization responses can be empty; the UI provides a fallback message. An expired session requires signing in again.
+
+## Care-team communication and follow-up
+
+All routes below require a valid account and CSRF for writes.
+
+| Method | Route | Behavior |
+|---|---|---|
+| GET | `/api/portal/config` | Reports whether practice tools are enabled |
+| GET/POST | `/api/conversations` | Lists authorized conversations / creates a thread with `{patientId, doctorId, subject, body}` |
+| GET | `/api/conversations/{id}?page=0` | Fifty messages per page, latest page first, messages displayed chronologically; returns conversation, messages, hasOlder, page |
+| POST | `/api/conversations/{id}/messages` | Sends `{body}`; 4,000 character maximum |
+| POST | `/api/conversations/{id}/read` | Acknowledges only the displayed `{messageId}`; does not acknowledge later replies |
+| GET/POST | `/api/patients/{id}/tasks` | Lists tasks / creates `{title, instructions, dueDate}` (ISO date) |
+| PUT | `/api/tasks/{id}` | Changes `{status, version}`; Open, Completed, or Cancelled; stale version returns 409 |
+
+Conversations are available only to the owning patient, addressed doctor, and administrators. Doctor accounts cannot inspect another doctor's conversation. A disabled doctor cannot receive new replies. A staff-created profile without a linked patient account cannot start a portal conversation. Tasks follow the existing single-clinic patient/staff authorization policy; personal and care-team task sources remain visible. Patient deletion removes messages, conversations, and tasks along with the existing care data.
+
+Practice mode defaults to false. `/api/admin/demo` and `/api/process/**` are registered only with `PRACTICE_TOOLS=true`; simulated health readings are forbidden otherwise.

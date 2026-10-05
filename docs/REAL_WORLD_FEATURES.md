@@ -1,24 +1,43 @@
 # Patient portal research and implementation
 
-Reviewed 2 October 2026. The sources are official product descriptions; SmartHealth does not integrate with or represent these services.
+Reviewed 5 October 2026 against official product pages. SmartHealth is independent of these providers and has no connection to their records or clinicians.
 
-| Source | Relevant pattern | SmartHealth implementation |
+| Comparable service | Documented feature | Useful pattern for SmartHealth |
 |---|---|---|
-| [MyChart features](https://www.mychart.org/Features) | Health summaries, medication lists, appointment management | Care record with allergies/history/notes, medication tracking, printable summary, appointment timeline |
-| [NHS App features](https://digital.nhs.uk/services/nhs-app/nhs-app-features) | Accessible records and appointment information | Reading trends, CSV export, upcoming visits, clear request/confirmation status |
+| [Patient Access](https://www.patientaccess.com/gp-features) | Appointments, practice messaging, repeat requests, sharing records | Reduce phone calls through a named-doctor inbox and a clear appointment request lifecycle |
+| [Mayo Clinic Patient Online Services](https://www.mayoclinic.org/patient-visitor-guide/how-to-make-the-most-of-your-appointment) | Appointment itinerary, health record, care-team messages | Put upcoming care and communication on the home screen |
+| [Mayo Clinic messaging](https://connect.mayoclinic.org/blog/chest-surgery/newsfeed-post/how-to-connect-with-your-care-team/) | Signed-in access to private care-team conversations | Account-based conversations with restricted recipients |
+| [MyChart Care Companion](https://www.mychart.org/l/en-us/features/view-medications-test-results-bills/) | Care plans, health tracking, reminders, check-ins | Due-dated follow-up tasks with completion tracking |
+| [NHS App features](https://digital.nhs.uk/services/nhs-app/nhs-app-features) | Records, appointments, messages, prescriptions, family access | Consistent patient access to records and next actions |
+| [Practo](https://www.practo.com/doctors) | Finding doctors, appointments, medical records | Make booking and stored information part of the same patient journey |
 
-## Features delivered
+## Delivered in the working application
 
-- **Care record:** allergies and reactions, conditions/history, and questions for the next visit. Empty fields explicitly mean “not recorded”.
-- **Medication list:** name, instructions, schedule, notes, active/stopped status, recorded-by/source labels. These are entered records, not prescriptions or automated dosing guidance.
-- **Reading trends:** seven measurement views including both blood-pressure values; entered-only default keeps synthetic monitoring data out of the personal trend unless requested.
-- **Portable summary:** print/save PDF in the browser; download the latest visible readings as CSV. Spreadsheet formula escaping is tested. No third-party export service receives data.
-- **Appointments:** request a date/time and active doctor; staff confirms, cancels, or completes visits. Requests are not advertised as available slots. The assigned doctor/admin can manage a request; patient owners can cancel. Confirmed 30-minute appointments cannot overlap for a doctor or patient. Version checks prevent stale changes.
-- **Calendar export:** confirmed appointments download an RFC 5545 calendar file with timezone-safe UTC timestamps. It is an export, not a synced calendar or automatic reminder service.
-- **Demo preparation:** administrators can add three named synthetic profiles and readings. Existing demo names are skipped. Benchmarks remain measured on demand.
+- Durable accounts, patient profiles, readings, allergy/history notes, medication lists, appointment requests, and calendar/CSV/print exports.
+- Patient/addressed-doctor conversations with saved replies, unread indicators, and paginated message history. Administrators retain explicit access; other doctors cannot read the thread.
+- Follow-up tasks with personal/care-team source, due date, overdue display, completion, cancellation, reopening, and stale-update protection.
+- A care overview showing upcoming visits, unread conversations, and patient tasks. Empty states direct users to create a profile or contact their administrator.
+- Blank measurement inputs, so example values cannot be mistaken for measurements.
+- Normal care mode by default. Synthetic seeding, simulations, and benchmark APIs require explicitly enabled practice mode; the original computing laboratory remains available for coursework.
 
-## Scope boundaries
+Messages stay in the portal. Refresh checks for replies; background email/SMS/push is not enabled. Tasks are displayed when signed in rather than promising background reminder delivery. Appointment requests still require staff confirmation and do not imply a doctor's available time slots.
 
-No real clinic connection, pharmacy integration, payment, automated diagnosis, email/SMS delivery, or emergency dispatch is implied. The value here is organizing information and managing a complete request/review workflow within the project. Real clinical use would need verified provider onboarding and a separate privacy/security/clinical validation process.
+## Next integrations, in priority order
 
-The original visual identity and Java parallel-processing laboratory are retained. Embedded H2 storage is now the default at the user's request; MySQL is not required. Durable hosting requires one Java process and a persistent disk.
+| Addition | Benefit | What is required |
+|---|---|---|
+| Public hosting and tested backups | Continuous access and recoverable records | Java-capable host, HTTPS, persistent disk, operator account, backup destination |
+| Account verification and password recovery | Patients regain access without admin intervention | Email provider, verified sending domain, expiring single-use tokens and abuse controls |
+| Provider onboarding and clinic settings | Actual clinicians can participate | Named clinic/operator and verified staff provisioning; membership model if multiple clinics |
+| Doctor availability and rescheduling | Patients select real available slots | Staff schedules, clinic timezone, holidays, cancellation policy, atomic booking |
+| Email/SMS reminders | Updates reach patients outside the site | Delivery-provider credentials, user opt-in, queue/retry handling, delivery records |
+| Lab/document uploads | Keep reports alongside readings | Private file storage, file validation/scanning, size limits, access-controlled downloads |
+| Medication renewal requests | Track questions about existing prescriptions | Verified prescribers and review workflow; pharmacy integration for actual dispensing |
+| Family/carer access | Assist dependants without sharing passwords | Explicit grants, consent/revocation, identity checks and access audit |
+| Video consultation | Support remote visits | Provider accounts, visit-specific access links, meeting service and staff availability |
+
+These are operating/integration requirements, not buttons that imply working external services. No payments, pharmacy delivery, connected device monitoring, automated diagnosis, or emergency dispatch is represented as active.
+
+## Operating scope
+
+The application currently uses one Java process with durable embedded H2 storage; MySQL is not required. Its care organization and communication workflows are functional. Automated risk scoring remains a simplified, unvalidated teaching feature. Before a clinic uses the system for care, the operator needs provider onboarding, access/audit policy, verified account recovery, backups, and a privacy/security/clinical review appropriate to its users and jurisdiction. The current source code is not a claim of medical certification or production clinical readiness.

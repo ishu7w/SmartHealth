@@ -1,10 +1,10 @@
 # Integrated Smart Healthcare Computing Solution
 
-A complete college PBL application for **Computer Architecture & Parallel Processing (CAPP)**, aligned with **SDG 3 — Good Health and Well-being**.
+A patient and care-team portal developed from a college **Computer Architecture & Parallel Processing (CAPP)** project, aligned with **SDG 3 — Good Health and Well-being**.
 
-The application combines patient accounts, persistent health records, threshold alerts, and a Java multithreading laboratory. The original SmartHealth interface is retained: dark artwork, glass surfaces, Instrument Serif headings, GSAP transitions, Lenis scrolling, and responsive navigation.
+The application provides accounts, durable care records, appointment requests, private doctor/patient conversations, and follow-up tasks. Its original dark artwork, glass surfaces, Instrument Serif headings, GSAP transitions, and Lenis scrolling remain. Simulation and the Java multithreading laboratory are disabled by default and can be enabled explicitly for teaching.
 
-**Educational prototype only. It does not diagnose, prescribe, monitor medical devices, or contact emergency services. Use synthetic information for demonstrations.**
+**The portal workflows save and retrieve actual user-entered information. Automated risk scores still use simplified teaching rules and are not validated for clinical decisions.** Public hosting, clinic/provider onboarding, account recovery, delivery services, and an operational privacy/security review remain separate work; a code update does not activate those services.
 
 ## What is implemented
 
@@ -20,7 +20,9 @@ The application combines patient accounts, persistent health records, threshold 
 | Access control | BCrypt passwords, server sessions, CSRF protection, role checks, patient ownership checks, immediate disabled-account revocation on next request |
 | Care record | Allergies, history, visit questions, medication list, trends, printable summary, CSV export |
 | Appointments | Patient requests, assigned-doctor/admin confirmation, cancellation/completion, overlap checks, calendar export |
-| Demo setup | Admin adds labelled synthetic profiles; helper script measures all five dataset sizes |
+| Messages | Patient/addressed-doctor/admin access only, replies, unread tracking, paginated history, disabled-doctor protection |
+| Follow-up | Personal or care-team tasks, due dates, overdue indicators, complete/cancel/reopen, version checks |
+| Practice tools | Disabled by default; explicitly enabled admin synthetic profiles and measured benchmarks |
 
 The default database is **embedded H2 on disk**. **MySQL is not required.** The previous Python implementation is retained only in `legacy/` and is not used by the rebuilt application. The browser-only fallback and illustrative benchmark numbers have been removed. Read [Patient portal research](docs/REAL_WORLD_FEATURES.md), [Deployment without MySQL](docs/DEPLOYMENT.md), and the [classroom demo guide](docs/DEMO_GUIDE.md).
 
@@ -56,7 +58,7 @@ export ADMIN_PASSWORD='your-admin-password-at-least-12-characters'
 mvn -f backend/pom.xml spring-boot:run
 ```
 
-The backend listens on port **8080**. JPA creates/updates the academic schema. For deployment to a maintained production system, replace automatic schema updates with reviewed database migrations.
+The backend listens on port **8080**. Practice tools default to disabled. Set `PRACTICE_TOOLS=true` only for classroom demonstrations or the complete browser verification suite. JPA creates/updates the schema; a maintained production deployment should use reviewed migrations.
 
 ### Existing demo profile compatibility
 

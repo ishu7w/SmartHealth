@@ -25,7 +25,7 @@ Copy `.env.example` to `.env`, replace the values, and run `docker compose up --
 2. Attach a persistent writable directory at `/app/data` (or use the host's mount path as `DATA_DIR`).
 3. Set `SPRING_PROFILES_ACTIVE=hosted`, `DATA_DIR`, `DATABASE_PASSWORD`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in the host's secret settings. No secrets go into Git.
 4. Expose the service through HTTPS. The hosted profile uses secure, HttpOnly session cookies. Keep the frontend and API on the same origin.
-5. Health-check `/api/health`. Only declare the deployment ready after role workflows, a real benchmark, and a restart/persistence check pass.
+5. Keep `PRACTICE_TOOLS=false` for normal care use. Health-check `/api/health`. Only declare the deployment ready after patient/staff records, messages, tasks, appointment workflows, and a restart/persistence check pass.
 
 Use **one application instance** with this embedded file database. Do not attach the same H2 file to multiple independently running JVMs or put it on an ephemeral serverless filesystem. Sessions expire on restart and require signing in again; records persist.
 

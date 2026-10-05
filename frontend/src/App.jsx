@@ -13,11 +13,17 @@ import ParallelDemo from "./pages/ParallelDemo";
 import About from "./pages/About";
 import Care from "./pages/Care";
 import Appointments from "./pages/Appointments";
+import Messages from "./pages/Messages";
+import Tasks from "./pages/Tasks";
 import Account from "./pages/Account";
 import Patients from "./pages/Patients";
 import Alerts from "./pages/Alerts";
 import Doctors from "./pages/Doctors";
-import { AccountBar, RequireAccount } from "./components/Session";
+import {
+  AccountBar,
+  RequireAccount,
+  PracticeTools,
+} from "./components/Session";
 export default function App() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
@@ -31,6 +37,11 @@ export default function App() {
       "/account": "Account",
       "/care": "Care record",
       "/appointments": "Appointments",
+      "/messages": "Messages",
+      "/tasks": "Follow-up tasks",
+      "/monitoring": "Practice monitoring",
+      "/parallel": "Processing tools",
+      "/about": "About SmartHealth",
     }[pathname] ||
     "Page not found";
   useEffect(() => {
@@ -100,14 +111,30 @@ export default function App() {
           <Route element={<RequireAccount />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/analysis" element={<PatientAnalysis />} />
-            <Route path="/monitoring" element={<Monitoring />} />
+            <Route
+              path="/monitoring"
+              element={
+                <PracticeTools>
+                  <Monitoring />
+                </PracticeTools>
+              }
+            />
             <Route path="/patients" element={<Patients />} />
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/care" element={<Care />} />
             <Route path="/appointments" element={<Appointments />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/tasks" element={<Tasks />} />
           </Route>
           <Route element={<RequireAccount staff />}>
-            <Route path="/parallel" element={<ParallelDemo />} />
+            <Route
+              path="/parallel"
+              element={
+                <PracticeTools>
+                  <ParallelDemo />
+                </PracticeTools>
+              }
+            />
           </Route>
           <Route element={<RequireAccount admin />}>
             <Route path="/doctors" element={<Doctors />} />
@@ -132,7 +159,7 @@ export default function App() {
           <strong>SmartHealth.</strong>
           <span>Healthcare meets computing.</span>
         </div>
-        <p>Educational prototype. Not for clinical use.</p>
+        <p>Your records. Your appointments. Your care team.</p>
         <Link to="/about">
           About the project <ArrowUpRight size={14} />
         </Link>

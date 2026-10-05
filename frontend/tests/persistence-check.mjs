@@ -40,7 +40,14 @@ try {
     summaries,
     alerts: await get("/api/alerts"),
     benchmarks: await get("/api/process/benchmarks"),
+    tasks: await Promise.all(
+      patients.map((p) => get(`/api/patients/${p.id}/tasks`)),
+    ),
+    conversations: await get("/api/conversations"),
   };
+  snapshot.threads = await Promise.all(
+    snapshot.conversations.map((c) => get(`/api/conversations/${c.id}`)),
+  );
   assert.ok(snapshot.benchmarks.length, "Measured benchmarks should persist");
   if (mode === "save")
     await writeFile(path, JSON.stringify(snapshot), { mode: 0o600 });
@@ -53,7 +60,7 @@ try {
   console.log(
     mode === "save"
       ? "Saved persistence snapshot."
-      : "PASS: accounts, profiles, readings, alerts, care records, appointments, and benchmarks survived restart.",
+      : "PASS: patient data, care records, appointments, messages, tasks, and benchmarks survived restart.",
   );
 } finally {
   await client.dispose();

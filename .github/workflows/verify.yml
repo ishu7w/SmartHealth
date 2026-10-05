@@ -11,6 +11,7 @@ jobs:
       ADMIN_EMAIL: admin@example.test
       ADMIN_PASSWORD: local-test-password-123
       APP_URL: http://localhost:8080
+      PRACTICE_TOOLS: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

@@ -1,6 +1,7 @@
 # College demonstration — 8–10 minutes
 
 Use synthetic information only. Start the combined application and sign in with the administrator you configured. Create a doctor account and keep its credentials private.
+For classroom demonstrations, explicitly set `PRACTICE_TOOLS=true` before starting the server. Normal deployments leave it false; synthetic seeding, simulation, and benchmark endpoints are unavailable in that mode.
 
 ## Preparation
 

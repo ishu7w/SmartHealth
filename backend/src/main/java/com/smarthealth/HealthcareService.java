@@ -19,6 +19,14 @@ class HealthcareService {
   final Appointments appointments;
   final Medications medications;
   final CareProfiles profiles;
+  final Conversations conversations;
+  final CareMessages messages;
+  final FollowUpTasks tasks;
+
+  @org.springframework.beans.factory.annotation.Value(
+    "${smarthealth.practice-tools:false}"
+  )
+  boolean practiceTools;
 
   HealthcareService(
     Users u,
@@ -28,7 +36,10 @@ class HealthcareService {
     HealthAnalyzer h,
     Appointments appointments,
     Medications medications,
-    CareProfiles profiles
+    CareProfiles profiles,
+    Conversations conversations,
+    CareMessages messages,
+    FollowUpTasks tasks
   ) {
     users = u;
     patients = p;
@@ -38,6 +49,9 @@ class HealthcareService {
     this.appointments = appointments;
     this.medications = medications;
     this.profiles = profiles;
+    this.conversations = conversations;
+    this.messages = messages;
+    this.tasks = tasks;
   }
 
   Models.User user(Authentication auth) {
@@ -144,6 +158,10 @@ class HealthcareService {
       HttpStatus.FORBIDDEN
     );
     var p = access(id, u);
+    for (var c : conversations.findByPatientIdOrderByUpdatedAtDesc(id))
+      messages.deleteByConversationId(c.id);
+    conversations.deleteByPatientId(id);
+    tasks.deleteByPatientId(id);
     appointments.deleteByPatientId(id);
     medications.deleteByPatientId(id);
     profiles.deleteByPatientId(id);
@@ -154,6 +172,10 @@ class HealthcareService {
 
   Models.HealthRecord record(Inputs.Vitals v, Models.User u) {
     var p = access(v.patientId(), u);
+    if (v.simulated() && !practiceTools) throw new ResponseStatusException(
+      HttpStatus.FORBIDDEN,
+      "Simulation is disabled in this workspace"
+    );
     if (v.systolicBP() <= v.diastolicBP()) throw new ResponseStatusException(
       HttpStatus.BAD_REQUEST,
       "Systolic pressure must exceed diastolic pressure"

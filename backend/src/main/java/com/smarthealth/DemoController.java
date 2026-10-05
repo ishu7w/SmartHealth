@@ -6,6 +6,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+  name = "smarthealth.practice-tools",
+  havingValue = "true"
+)
 @RequestMapping("/api/admin/demo")
 class DemoController {
 
