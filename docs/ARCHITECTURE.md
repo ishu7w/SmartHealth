@@ -103,3 +103,11 @@ Self-registration always assigns `PATIENT`, regardless of extra input fields. St
 The browser uses a session cookie (`HttpOnly`, `SameSite=Lax`) and a separate synchronizer CSRF token for mutations, including login/logout. Use HTTPS and `COOKIE_SECURE=true` when hosting publicly. The combined build serves both tiers from one origin; broad CORS is intentionally not enabled.
 
 This bounded classroom system uses recent-history limits and automatic JPA schema updates. A production medical system would require a separate assessment of consent, auditing, retention, clinical validation, availability, and regulatory requirements. None is claimed here.
+
+## Portal communication and follow-up
+
+`PortalController` validates requests and resolves the current account; `PortalService` owns conversation access, message delivery/read acknowledgement, and task transitions. `PortalModels` and its repositories persist conversations, messages, and follow-up tasks. Conversation foreign keys link the patient and addressed doctor; message foreign keys link the conversation. Patient deletion removes dependent messages/tasks before the patient itself.
+
+Conversation access is narrower than clinic-wide health-record access: patient ownership, addressed doctor, or administrator. Message reads use paginated history, and read acknowledgements carry the last displayed message ID so unseen concurrent replies remain unread. Task updates use a JPA version to reject stale changes. All writes retain the existing server-session/CSRF authentication.
+
+Practice mode is an explicit application property, false by default. Synthetic seeding and processing controllers are conditionally registered; synthetic health-record input is rejected in normal mode. The normal interface emphasizes records, appointments, messages, and follow-up. The original artwork and animation utilities are retained.

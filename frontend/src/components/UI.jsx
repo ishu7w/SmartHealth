@@ -52,9 +52,8 @@ export function Disclaimer() {
     <div className="disclaimer">
       <Info size={17} />
       <p>
-        This application is an educational prototype developed for academic
-        demonstration and is not intended for medical diagnosis or treatment.
-        All ranges are simplified teaching examples, not medical advice.
+        Keep your care team informed about your measurements. Automated scores
+        use simplified rules and are not validated for diagnosis or treatment.
       </p>
     </div>
   );

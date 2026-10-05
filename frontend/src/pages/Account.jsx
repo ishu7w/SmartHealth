@@ -34,12 +34,12 @@ export default function Account() {
     <div className="page-stack">
       <PageHeading
         title="Your health workspace."
-        description="Patient records, clear signals, and the computing behind them."
+        description="Your care records, appointments, follow-up tasks, and care team in one place."
       />
       <section className="panel account-panel">
         <div className="section-heading">
           <h2>{register ? "Create a patient account" : "Welcome back"}</h2>
-          <span className="sample-label">Academic edition</span>
+          <span className="sample-label">Patient portal</span>
         </div>
         <p>
           {register

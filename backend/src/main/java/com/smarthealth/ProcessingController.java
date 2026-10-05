@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+  name = "smarthealth.practice-tools",
+  havingValue = "true"
+)
 @RequestMapping("/api/process")
 class ProcessingController {
 

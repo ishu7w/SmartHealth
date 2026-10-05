@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Link, Navigate, Outlet } from "react-router-dom";
 import { request, logout } from "../services/api";
 import { ErrorNotice, Loading } from "./UI";
+import { useResource, ResourceState } from "./DataViews";
 
 const Session = createContext(null);
 export const useSession = () => useContext(Session);
@@ -105,6 +106,8 @@ export function AccountBar() {
           <Link to="/alerts">Alerts</Link>
           <Link to="/care">Care record</Link>
           <Link to="/appointments">Appointments</Link>
+          <Link to="/messages">Messages</Link>
+          <Link to="/tasks">Follow-up</Link>
           {user.role === "ADMIN" && <Link to="/doctors">Doctors</Link>}
           <button
             className="text-button"
@@ -127,5 +130,27 @@ export function AccountBar() {
       </div>
       {error && <ErrorNotice message={error} />}
     </div>
+  );
+}
+export function PracticeTools({ children }) {
+  const config = useResource("/portal/config");
+  return (
+    <ResourceState resource={config}>
+      {config.data?.practiceTools ? (
+        children
+      ) : (
+        <section className="panel">
+          <h1>Practice tools are disabled.</h1>
+          <p>
+            This workspace is configured for patient care. Simulation and
+            benchmark tools are available only when an administrator enables
+            practice mode.
+          </p>
+          <Link className="button" to="/">
+            Back to your care
+          </Link>
+        </section>
+      )}
+    </ResourceState>
   );
 }

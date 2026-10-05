@@ -56,10 +56,22 @@ class HealthcareIntegrationTest {
   @Autowired
   Appointments appointments;
 
+  @Autowired
+  Conversations conversations;
+
+  @Autowired
+  CareMessages careMessages;
+
+  @Autowired
+  FollowUpTasks followUpTasks;
+
   long aliceId, bobId;
 
   @BeforeEach
   void setup() {
+    careMessages.deleteAll();
+    conversations.deleteAll();
+    followUpTasks.deleteAll();
     appointments.deleteAll();
     medications.deleteAll();
     careProfiles.deleteAll();
@@ -655,5 +667,252 @@ class HealthcareIntegrationTest {
         .analyze(new Inputs.Vitals(1L, 110, 140, 90, 38, 92, 130, 25, false))
         .healthStatus()
     );
+  }
+
+  @Test
+  @WithMockUser(username = "alice@example.test", roles = "PATIENT")
+  void messagesArePrivateAndUnreadAcknowledgesOnlyDisplayedMessages()
+    throws Exception {
+    var body = json.writeValueAsString(
+      new PortalController.NewConversation(
+        aliceId,
+        users.findByEmail("doctor@example.test").orElseThrow().id,
+        "Follow up",
+        "Question for care team"
+      )
+    );
+    var response = mvc
+      .perform(
+        post("/api/conversations")
+          .with(csrf())
+          .contentType("application/json")
+          .content(body)
+      )
+      .andExpect(status().isCreated())
+      .andReturn();
+    long id = json
+      .readTree(response.getResponse().getContentAsString())
+      .get("id")
+      .asLong();
+    long first = careMessages.findAll().getFirst().id;
+    mvc
+      .perform(get("/api/conversations"))
+      .andExpect(jsonPath("$.length()").value(1));
+    mvc
+      .perform(
+        get("/api/conversations/" + id).with(
+          user("bob@example.test").roles("PATIENT")
+        )
+      )
+      .andExpect(status().isForbidden());
+    mvc
+      .perform(
+        post("/api/conversations/" + id + "/messages")
+          .with(user("bob@example.test").roles("PATIENT"))
+          .with(csrf())
+          .contentType("application/json")
+          .content("{\"body\":\"Intrusion\"}")
+      )
+      .andExpect(status().isForbidden());
+    mvc
+      .perform(
+        post("/api/conversations/" + id + "/messages")
+          .with(user("doctor@example.test").roles("DOCTOR"))
+          .with(csrf())
+          .contentType("application/json")
+          .content("{\"body\":\"Please bring your readings\"}")
+      )
+      .andExpect(status().isCreated());
+    mvc
+      .perform(
+        post("/api/conversations/" + id + "/read")
+          .with(csrf())
+          .contentType("application/json")
+          .content("{\"messageId\":" + first + "}")
+      )
+      .andExpect(status().isNoContent());
+    var saved = conversations.findById(id).orElseThrow();
+    assertTrue(saved.updatedAt.isAfter(saved.patientReadAt));
+    mvc
+      .perform(get("/api/conversations/" + id))
+      .andExpect(jsonPath("$.messages.length()").value(2))
+      .andExpect(
+        jsonPath("$.messages[1].body").value("Please bring your readings")
+      );
+    mvc
+      .perform(get("/api/conversations/" + id + "?page=-1"))
+      .andExpect(status().isBadRequest());
+    for (int i = 0; i < 50; i++) {
+      var m = new PortalModels.Message();
+      m.conversationId = id;
+      m.senderId = users.findByEmail("alice@example.test").orElseThrow().id;
+      m.senderName = "alice";
+      m.senderRole = "PATIENT";
+      m.body = "Older history check " + i;
+      careMessages.save(m);
+    }
+    mvc
+      .perform(get("/api/conversations/" + id))
+      .andExpect(jsonPath("$.messages.length()").value(50))
+      .andExpect(jsonPath("$.hasOlder").value(true));
+    mvc
+      .perform(get("/api/conversations/" + id + "?page=1"))
+      .andExpect(jsonPath("$.messages.length()").value(2))
+      .andExpect(jsonPath("$.hasOlder").value(false));
+    mvc
+      .perform(
+        delete("/api/patients/" + aliceId)
+          .with(user("admin@example.test").roles("ADMIN"))
+          .with(csrf())
+      )
+      .andExpect(status().isNoContent());
+    assertEquals(0, careMessages.count());
+    assertEquals(0, conversations.count());
+  }
+
+  @Test
+  @WithMockUser(username = "alice@example.test", roles = "PATIENT")
+  void otherDoctorsCannotReadMessagesAndDisabledDoctorCannotReceiveReplies()
+    throws Exception {
+    var other = new Models.User();
+    other.email = "other@example.test";
+    other.name = "Other";
+    other.role = "DOCTOR";
+    other.password = passwords.encode("test-password-123");
+    users.save(other);
+    long doctor = users.findByEmail("doctor@example.test").orElseThrow().id;
+    mvc
+      .perform(
+        post("/api/conversations")
+          .with(csrf())
+          .contentType("application/json")
+          .content(
+            json.writeValueAsString(
+              new PortalController.NewConversation(
+                aliceId,
+                doctor,
+                "Question",
+                "Hello"
+              )
+            )
+          )
+      )
+      .andExpect(status().isCreated());
+    long id = conversations.findAll().getFirst().id;
+    mvc
+      .perform(
+        get("/api/conversations").with(user(other.email).roles("DOCTOR"))
+      )
+      .andExpect(jsonPath("$.length()").value(0));
+    mvc
+      .perform(
+        get("/api/conversations/" + id).with(user(other.email).roles("DOCTOR"))
+      )
+      .andExpect(status().isForbidden());
+    var d = users.findById(doctor).orElseThrow();
+    d.enabled = false;
+    users.save(d);
+    mvc
+      .perform(
+        post("/api/conversations/" + id + "/messages")
+          .with(csrf())
+          .contentType("application/json")
+          .content("{\"body\":\"Hello\"}")
+      )
+      .andExpect(status().isConflict());
+    mvc
+      .perform(
+        post("/api/conversations")
+          .with(csrf())
+          .contentType("application/json")
+          .content(
+            json.writeValueAsString(
+              new PortalController.NewConversation(
+                bobId,
+                other.id,
+                "Question",
+                "Hello"
+              )
+            )
+          )
+      )
+      .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "alice@example.test", roles = "PATIENT")
+  void followUpTasksEnforceOwnershipValidationAndStaleVersions()
+    throws Exception {
+    String body = json.writeValueAsString(
+      new PortalController.NewTask(
+        "Bring measurements",
+        "Record your questions",
+        java.time.LocalDate.now().plusDays(1)
+      )
+    );
+    mvc
+      .perform(
+        post("/api/patients/" + aliceId + "/tasks")
+          .with(csrf())
+          .contentType("application/json")
+          .content(body)
+      )
+      .andExpect(status().isCreated())
+      .andExpect(jsonPath("$.source").value("Personal task"));
+    long id = followUpTasks.findAll().getFirst().id;
+    mvc
+      .perform(get("/api/patients/" + bobId + "/tasks"))
+      .andExpect(status().isForbidden());
+    mvc
+      .perform(
+        put("/api/tasks/" + id)
+          .with(user("bob@example.test").roles("PATIENT"))
+          .with(csrf())
+          .contentType("application/json")
+          .content("{\"status\":\"Completed\",\"version\":0}")
+      )
+      .andExpect(status().isForbidden());
+    mvc
+      .perform(
+        put("/api/tasks/" + id)
+          .with(csrf())
+          .contentType("application/json")
+          .content("{\"status\":\"Completed\",\"version\":0}")
+      )
+      .andExpect(status().isOk());
+    mvc
+      .perform(
+        put("/api/tasks/" + id)
+          .with(csrf())
+          .contentType("application/json")
+          .content("{\"status\":\"Open\",\"version\":0}")
+      )
+      .andExpect(status().isConflict());
+    mvc
+      .perform(
+        put("/api/tasks/" + id)
+          .with(csrf())
+          .contentType("application/json")
+          .content("{\"status\":\"Open\",\"version\":1}")
+      )
+      .andExpect(status().isOk());
+    mvc
+      .perform(
+        post("/api/patients/" + aliceId + "/tasks")
+          .with(csrf())
+          .contentType("application/json")
+          .content(
+            "{\"title\":\" \",\"instructions\":\"\",\"dueDate\":\"2026-10-06\"}"
+          )
+      )
+      .andExpect(status().isBadRequest());
+    mvc
+      .perform(
+        delete("/api/patients/" + aliceId)
+          .with(user("admin@example.test").roles("ADMIN"))
+          .with(csrf())
+      )
+      .andExpect(status().isNoContent());
+    assertEquals(0, followUpTasks.count());
   }
 }

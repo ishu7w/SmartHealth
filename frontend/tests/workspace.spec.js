@@ -38,6 +38,15 @@ test("patient, doctor, and administrator workflows remain usable across screen s
     page.getByRole("heading", { name: "Browser Test Patient", exact: true }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Add reading", exact: true }).click();
+  for (const [label, value] of [
+    ["Heart rate (bpm)", "75"],
+    ["Systolic pressure (mmHg)", "115"],
+    ["Diastolic pressure (mmHg)", "75"],
+    ["Temperature (°C)", "36.8"],
+    ["Blood glucose (mg/dL)", "90"],
+    ["Respiratory rate (/min)", "16"],
+  ])
+    await page.getByLabel(label, { exact: true }).fill(value);
   await page.getByLabel("Oxygen saturation (%)").fill("88");
   await page.getByRole("button", { name: "Analyze & save reading" }).click();
   await expect(
@@ -198,6 +207,8 @@ test("patient, doctor, and administrator workflows remain usable across screen s
       "/about",
       "/care",
       "/appointments",
+      "/messages",
+      "/tasks",
     ]) {
       await page.goto(route);
       await expect(page.locator("h1")).toBeVisible();
