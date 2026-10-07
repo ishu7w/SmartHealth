@@ -37,3 +37,19 @@ test("switching the measurement patient clears the previous patient's readings",
     page.getByLabel("Heart rate (bpm)", { exact: true }),
   ).toHaveValue("");
 });
+
+test("switching the task patient clears the previous patient's draft", async ({
+  page,
+}) => {
+  await workspace(page);
+  await page.goto("/tasks");
+  await page.getByLabel("Task title").fill("Alice follow-up");
+  await page
+    .getByLabel("Instructions or notes")
+    .fill("Alice's private instructions");
+  await page.getByLabel("Due date", { exact: true }).fill("2027-01-01");
+  await page.getByLabel("Task patient").selectOption("2");
+  await expect(page.getByLabel("Task title")).toHaveValue("");
+  await expect(page.getByLabel("Instructions or notes")).toHaveValue("");
+  await expect(page.getByLabel("Due date", { exact: true })).toHaveValue("");
+});

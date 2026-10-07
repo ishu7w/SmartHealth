@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Field, ResourceState, useResource } from "../components/DataViews";
 import { ErrorNotice, PageHeading } from "../components/UI";
@@ -19,6 +19,11 @@ export default function Tasks() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
+  useEffect(() => {
+    setForm({ title: "", instructions: "", dueDate: "" });
+    setError("");
+    setNotice("");
+  }, [selected]);
   async function add(e) {
     e.preventDefault();
     setBusy(true);
@@ -68,6 +73,7 @@ export default function Tasks() {
                 <Field label="Task patient">
                   <select
                     value={selected}
+                    disabled={busy}
                     onChange={(e) => {
                       setParams({ patient: e.target.value });
                       setError("");
