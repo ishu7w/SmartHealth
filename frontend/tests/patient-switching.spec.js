@@ -53,3 +53,13 @@ test("switching the task patient clears the previous patient's draft", async ({
   await expect(page.getByLabel("Instructions or notes")).toHaveValue("");
   await expect(page.getByLabel("Due date", { exact: true })).toHaveValue("");
 });
+
+test("permission errors are not reported as a server connection failure", async ({
+  page,
+}) => {
+  await workspace(page, true);
+  await page.goto("/appointments");
+  await expect(
+    page.getByText("You do not have permission to perform this action."),
+  ).toBeVisible();
+});

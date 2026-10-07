@@ -1,4 +1,5 @@
 import axios from "axios";
+import { apiErrorMessage } from "./apiErrors";
 
 const client = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api",
@@ -28,12 +29,7 @@ export async function request(path, method = "GET", data) {
       throw new Error("Invalid API response");
     return response.data;
   } catch (error) {
-    const failure = new Error(
-      error.response?.data?.message ||
-        (error.response?.status === 401
-          ? "Please sign in to continue."
-          : "Could not reach the healthcare server. Please retry."),
-    );
+    const failure = new Error(apiErrorMessage(error));
     failure.status = error.response?.status;
     if (failure.status === 403 || failure.status === 401) csrf = undefined;
     if (failure.status === 401 && !path.startsWith("/auth/"))
