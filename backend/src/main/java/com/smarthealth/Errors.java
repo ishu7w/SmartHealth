@@ -43,6 +43,30 @@ class Errors {
     Errors.class
   );
 
+  @ExceptionHandler(
+    org.springframework.web.HttpRequestMethodNotSupportedException.class
+  )
+  ResponseEntity<?> method(
+    org.springframework.web.HttpRequestMethodNotSupportedException e
+  ) {
+    var headers = new HttpHeaders();
+    if (e.getSupportedHttpMethods() != null) headers.setAllow(
+      e.getSupportedHttpMethods()
+    );
+    return ResponseEntity.status(405)
+      .headers(headers)
+      .body(Map.of("message", "This HTTP method is not supported"));
+  }
+
+  @ExceptionHandler(
+    org.springframework.web.HttpMediaTypeNotSupportedException.class
+  )
+  ResponseEntity<?> media() {
+    return ResponseEntity.status(415).body(
+      Map.of("message", "Send the request as application/json")
+    );
+  }
+
   @ExceptionHandler(HttpMessageNotReadableException.class)
   ResponseEntity<?> malformed() {
     return ResponseEntity.badRequest().body(

@@ -970,4 +970,23 @@ class HealthcareIntegrationTest {
       .andExpect(status().isOk())
       .andExpect(jsonPath("$.enabled").value(false));
   }
+
+  @Test
+  @WithMockUser(username = "alice@example.test", roles = "PATIENT")
+  void unsupportedMethodsAndMediaTypesReturnClientErrors() throws Exception {
+    mvc
+      .perform(post("/api/patients/" + aliceId + "/summary").with(csrf()))
+      .andExpect(status().isMethodNotAllowed())
+      .andExpect(
+        header().string("Allow", org.hamcrest.Matchers.containsString("GET"))
+      );
+    mvc
+      .perform(
+        put("/api/patients/" + aliceId + "/care-profile")
+          .with(csrf())
+          .contentType("text/plain")
+          .content("not JSON")
+      )
+      .andExpect(status().isUnsupportedMediaType());
+  }
 }
