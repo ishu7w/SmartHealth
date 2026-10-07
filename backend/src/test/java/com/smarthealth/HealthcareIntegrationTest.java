@@ -944,4 +944,30 @@ class HealthcareIntegrationTest {
       java.util.Locale.setDefault(previous);
     }
   }
+
+  @Test
+  @WithMockUser(username = "admin@example.test", roles = "ADMIN")
+  void incompleteDoctorAccessRequestDoesNotDisableAccount() throws Exception {
+    long id = users.findByEmail("doctor@example.test").orElseThrow().id;
+    for (String body : new String[] { "{}", "{\"enabled\":null}" }) {
+      mvc
+        .perform(
+          put("/api/admin/doctors/" + id + "/enabled")
+            .with(csrf())
+            .contentType("application/json")
+            .content(body)
+        )
+        .andExpect(status().isBadRequest());
+      assertTrue(users.findById(id).orElseThrow().enabled);
+    }
+    mvc
+      .perform(
+        put("/api/admin/doctors/" + id + "/enabled")
+          .with(csrf())
+          .contentType("application/json")
+          .content("{\"enabled\":false}")
+      )
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.enabled").value(false));
+  }
 }

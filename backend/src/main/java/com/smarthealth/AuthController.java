@@ -72,10 +72,14 @@ class AuthController {
     return create(input, "DOCTOR");
   }
 
+  record DoctorAccess(
+    @jakarta.validation.constraints.NotNull Boolean enabled
+  ) {}
+
   @PutMapping("/admin/doctors/{id}/enabled")
   Models.User enabled(
     @PathVariable Long id,
-    @RequestBody Map<String, Boolean> body
+    @Valid @RequestBody DoctorAccess body
   ) {
     var user = users
       .findById(id)
@@ -84,7 +88,7 @@ class AuthController {
       HttpStatus.BAD_REQUEST,
       "Not a doctor"
     );
-    user.enabled = Boolean.TRUE.equals(body.get("enabled"));
+    user.enabled = body.enabled();
     return users.save(user);
   }
 
