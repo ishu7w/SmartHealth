@@ -26,7 +26,7 @@ class SecurityConfig {
   UserDetailsService userDetailsService(Users users) {
     return email -> {
       var user = users
-        .findByEmail(email.toLowerCase())
+        .findByEmail(email.trim().toLowerCase(java.util.Locale.ROOT))
         .orElseThrow(() ->
           new UsernameNotFoundException("Invalid credentials")
         );

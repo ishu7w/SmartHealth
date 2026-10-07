@@ -100,7 +100,7 @@ class AuthController {
         "Password must fit within 72 UTF-8 bytes"
       );
     }
-    String email = input.email().trim().toLowerCase();
+    String email = input.email().trim().toLowerCase(Locale.ROOT);
     if (users.findByEmail(email).isPresent()) throw new ResponseStatusException(
       HttpStatus.CONFLICT,
       "Email already registered"
@@ -120,7 +120,8 @@ class AuthController {
   ) {
     return args -> {
       if (
-        !email.isBlank() && users.findByEmail(email.toLowerCase()).isEmpty()
+        !email.isBlank() &&
+        users.findByEmail(email.trim().toLowerCase(Locale.ROOT)).isEmpty()
       ) {
         if (password.length() < 12) throw new IllegalStateException(
           "ADMIN_PASSWORD must contain at least 12 characters"

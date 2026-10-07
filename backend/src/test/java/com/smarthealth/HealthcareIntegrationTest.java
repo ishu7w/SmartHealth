@@ -915,4 +915,33 @@ class HealthcareIntegrationTest {
       .andExpect(status().isNoContent());
     assertEquals(0, followUpTasks.count());
   }
+
+  @Test
+  void emailNormalizationIsIndependentOfServerLocale() throws Exception {
+    var previous = java.util.Locale.getDefault();
+    try {
+      java.util.Locale.setDefault(java.util.Locale.forLanguageTag("tr-TR"));
+      mvc
+        .perform(
+          post("/api/auth/register")
+            .with(csrf())
+            .contentType("application/json")
+            .content(
+              "{\"name\":\"Locale test\",\"email\":\"ISHU@example.test\",\"password\":\"test-password-123\"}"
+            )
+        )
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.email").value("ishu@example.test"));
+      mvc
+        .perform(
+          post("/api/auth/login")
+            .with(csrf())
+            .param("username", "ISHU@example.test")
+            .param("password", "test-password-123")
+        )
+        .andExpect(status().isOk());
+    } finally {
+      java.util.Locale.setDefault(previous);
+    }
+  }
 }
