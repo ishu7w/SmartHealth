@@ -33,6 +33,6 @@ public final class CareInputs {
   public record AppointmentUpdate(
     @NotBlank @Pattern(regexp = "Confirmed|Cancelled|Completed") String status,
     @NotNull @Size(max = 2000) String staffNotes,
-    @Min(0) long version
+    @NotNull @Min(0) Long version
   ) {}
 }

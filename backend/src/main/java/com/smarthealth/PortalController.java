@@ -30,7 +30,7 @@ class PortalController {
 
   record TaskChange(
     @NotBlank @Pattern(regexp = "Open|Completed|Cancelled") String status,
-    @Min(0) long version
+    @NotNull @Min(0) Long version
   ) {}
 
   final PortalService portal;

@@ -989,4 +989,45 @@ class HealthcareIntegrationTest {
       )
       .andExpect(status().isUnsupportedMediaType());
   }
+
+  @Test
+  @WithMockUser(username = "alice@example.test", roles = "PATIENT")
+  void updateRequestsRequireExplicitVersions() throws Exception {
+    long visit = requestVisit(
+      aliceId,
+      java.time.Instant.now().plusSeconds(86400)
+    );
+    mvc
+      .perform(
+        put("/api/appointments/" + visit)
+          .with(csrf())
+          .contentType("application/json")
+          .content("{\"status\":\"Cancelled\",\"staffNotes\":\"\"}")
+      )
+      .andExpect(status().isBadRequest());
+    mvc
+      .perform(
+        post("/api/patients/" + aliceId + "/tasks")
+          .with(csrf())
+          .contentType("application/json")
+          .content(
+            "{\"title\":\"Bring readings\",\"instructions\":\"\",\"dueDate\":\"2027-01-01\"}"
+          )
+      )
+      .andExpect(status().isCreated());
+    long task = followUpTasks.findAll().getFirst().id;
+    mvc
+      .perform(
+        put("/api/tasks/" + task)
+          .with(csrf())
+          .contentType("application/json")
+          .content("{\"status\":\"Completed\"}")
+      )
+      .andExpect(status().isBadRequest());
+    assertEquals(
+      "Requested",
+      appointments.findById(visit).orElseThrow().status
+    );
+    assertEquals("Open", followUpTasks.findById(task).orElseThrow().status);
+  }
 }
