@@ -1030,4 +1030,41 @@ class HealthcareIntegrationTest {
     );
     assertEquals("Open", followUpTasks.findById(task).orElseThrow().status);
   }
+
+  @Test
+  @WithMockUser(username = "doctor@example.test", roles = "DOCTOR")
+  void doctorTimelineDoesNotExposeOtherDoctorsAppointments() throws Exception {
+    var other = new Models.User();
+    other.email = "other@example.test";
+    other.name = "Other doctor";
+    other.role = "DOCTOR";
+    other.password = "unused";
+    users.save(other);
+    var visit = new CareModels.Appointment();
+    visit.patientId = aliceId;
+    visit.doctorId = other.id;
+    visit.patientName = "alice";
+    visit.doctorName = other.name;
+    visit.reason = "Private visit";
+    visit.scheduledAt = java.time.Instant.now().plusSeconds(86400);
+    appointments.save(visit);
+    mvc
+      .perform(get("/api/appointments"))
+      .andExpect(jsonPath("$.length()").value(0));
+    mvc
+      .perform(get("/api/patients/" + aliceId + "/summary"))
+      .andExpect(jsonPath("$.appointments.length()").value(0));
+    mvc
+      .perform(
+        get("/api/appointments").with(user("admin@example.test").roles("ADMIN"))
+      )
+      .andExpect(jsonPath("$.length()").value(1));
+    mvc
+      .perform(
+        get("/api/appointments").with(
+          user("alice@example.test").roles("PATIENT")
+        )
+      )
+      .andExpect(jsonPath("$.length()").value(1));
+  }
 }

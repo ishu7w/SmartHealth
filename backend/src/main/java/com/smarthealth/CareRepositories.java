@@ -19,6 +19,9 @@ interface Medications extends JpaRepository<CareModels.Medication, Long> {
 }
 
 interface Appointments extends JpaRepository<CareModels.Appointment, Long> {
+  List<CareModels.Appointment> findTop100ByDoctorIdOrderByScheduledAtDesc(
+    Long id
+  );
   List<CareModels.Appointment> findTop100ByOrderByScheduledAtDesc();
   List<CareModels.Appointment> findTop100ByPatientIdOrderByScheduledAtDesc(
     Long id

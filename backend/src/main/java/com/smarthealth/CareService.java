@@ -51,7 +51,11 @@ class CareService {
       "readings",
       health.history(id, user),
       "appointments",
-      appointments.findTop100ByPatientIdOrderByScheduledAtDesc(id),
+      appointments
+        .findTop100ByPatientIdOrderByScheduledAtDesc(id)
+        .stream()
+        .filter(a -> !user.role.equals("DOCTOR") || user.id.equals(a.doctorId))
+        .toList(),
       "generatedAt",
       Instant.now()
     );
@@ -121,6 +125,9 @@ class CareService {
   }
 
   List<CareModels.Appointment> visible(Models.User user) {
+    if (
+      user.role.equals("DOCTOR")
+    ) return appointments.findTop100ByDoctorIdOrderByScheduledAtDesc(user.id);
     return health.staff(user)
       ? appointments.findTop100ByOrderByScheduledAtDesc()
       : patients
