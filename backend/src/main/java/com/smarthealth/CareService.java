@@ -67,6 +67,12 @@ class CareService {
     Models.User user
   ) {
     health.access(id, user);
+    // Serialize first-time inserts and later edits against the same patient row.
+    patients
+      .lockById(id)
+      .orElseThrow(() ->
+        new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found")
+      );
     var p = profiles.findByPatientId(id).orElseGet(CareModels.Profile::new);
     p.patientId = id;
     p.allergies = input.allergies().trim();

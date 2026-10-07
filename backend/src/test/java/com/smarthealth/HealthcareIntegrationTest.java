@@ -1067,4 +1067,42 @@ class HealthcareIntegrationTest {
       )
       .andExpect(jsonPath("$.length()").value(1));
   }
+
+  @Test
+  void concurrentFirstCareProfileSavesDoNotConflict() throws Exception {
+    var pool = java.util.concurrent.Executors.newFixedThreadPool(6);
+    var start = new java.util.concurrent.CountDownLatch(1);
+    try {
+      var results = new java.util.ArrayList<
+        java.util.concurrent.Future<Integer>
+      >();
+      for (int i = 0; i < 6; i++) results.add(
+        pool.submit(() -> {
+          start.await();
+          return mvc
+            .perform(
+              put("/api/patients/" + aliceId + "/care-profile")
+                .with(user("alice@example.test").roles("PATIENT"))
+                .with(csrf())
+                .contentType("application/json")
+                .content(
+                  "{\"allergies\":\"Test\",\"conditions\":\"\",\"careNotes\":\"\"}"
+                )
+            )
+            .andReturn()
+            .getResponse()
+            .getStatus();
+        })
+      );
+      start.countDown();
+      for (var result : results)
+        assertEquals(
+          200,
+          result.get(15, java.util.concurrent.TimeUnit.SECONDS)
+        );
+      assertEquals(1, careProfiles.count());
+    } finally {
+      pool.shutdownNow();
+    }
+  }
 }
