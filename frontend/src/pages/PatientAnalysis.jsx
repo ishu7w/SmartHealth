@@ -75,6 +75,12 @@ export default function PatientAnalysis() {
                     onChange={(e) => {
                       setPatientId(e.target.value);
                       setResult(null);
+                      setError("");
+                      setVitals(
+                        Object.fromEntries(
+                          Object.keys(normalVitals).map((key) => [key, ""]),
+                        ),
+                      );
                     }}
                     disabled={busy}
                   >
